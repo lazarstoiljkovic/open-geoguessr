@@ -2,7 +2,7 @@
   "name": "open-geoguessr-api",
   "version": "1.0.0",
   "description": "Open GeoGuessr backend API",
-  "main": "dist/src/server.js",
+  "main": "dist/server.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only -r tsconfig-paths/register src/server.ts",
     "build": "rm -rf dist && tsc && tsc-alias",
