@@ -67,7 +67,7 @@ export default function LocationGallery({ images, alt = 'Location' }: LocationGa
           ref={imgRef}
           key={src}
           src={src}
-          alt={`${alt} — photo ${displayIndex + 1}`}
+          alt={`${alt} — ${displayIndex + 1}`}
           className={classNames('location-gallery__image', {
             'location-gallery__image--visible': loaded[displayIndex],
             'location-gallery__image--zoomed': zoomed,
