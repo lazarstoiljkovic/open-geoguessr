@@ -201,6 +201,9 @@ interface GameContextValue extends GameState {
   reset: () => void;
   sendMessage: (text: string) => void;
   broadcastPinMove: (lat: number, lng: number) => void;
+  requestHint: (hintType: 'continent' | 'country') => Promise<void>;
+  hintResults: { continent?: string; country?: string };
+  usedHints: Set<string>;
   isStarting: boolean;
   isSubmittingGuess: boolean;
   isAdvancingRound: boolean;
@@ -215,6 +218,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const [isStarting, setIsStarting] = useState(false);
   const [isSubmittingGuess, setIsSubmittingGuess] = useState(false);
   const [isAdvancingRound, setIsAdvancingRound] = useState(false);
+  const [hintResults, setHintResults] = useState<{ continent?: string; country?: string }>({});
+  const [usedHints, setUsedHints] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     roomCodeRef.current = state.room?.code;
@@ -235,11 +240,14 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       socket.on('room_updated', (data) => dispatch({ type: 'ROOM_UPDATED', room: data as Room })),
       socket.on('game_countdown', (data) => {
         setIsStarting(false);
+        setHintResults({});
+        setUsedHints(new Set());
         dispatch({ type: 'GAME_COUNTDOWN', seconds: (data as { seconds: number }).seconds });
       }),
       socket.on('countdown_tick', (data) => dispatch({ type: 'COUNTDOWN_TICK', remaining: (data as { remaining: number }).remaining })),
       socket.on('round_started', (data) => {
         const d = data as { round: Round; roundIndex: number; totalRounds: number; durationSeconds: number; eliminatedPlayerIds?: string[] };
+        setHintResults({});
         dispatch({
           type: 'ROUND_STARTED',
           round: d.round,
@@ -348,6 +356,18 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     socket.send('pin_move', { lat, lng });
   }, []);
 
+  const requestHint = useCallback(async (hintType: 'continent' | 'country') => {
+    const roomCode = roomCodeRef.current;
+    if (!roomCode) return;
+    try {
+      const result = await gameApi.requestHint(roomCode, hintType);
+      setUsedHints((prev) => new Set([...prev, hintType]));
+      setHintResults((prev) => ({ ...prev, [hintType]: result.value }));
+    } catch (err) {
+      console.error('[requestHint]', err);
+    }
+  }, []);
+
   return (
     <GameContext.Provider value={{
       ...state,
@@ -359,6 +379,9 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       reset,
       sendMessage,
       broadcastPinMove,
+      requestHint,
+      hintResults,
+      usedHints,
       isStarting,
       isSubmittingGuess,
       isAdvancingRound,

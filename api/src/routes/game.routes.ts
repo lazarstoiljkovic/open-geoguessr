@@ -49,4 +49,23 @@ router.post('/next-round', authMiddleware, async (ctx) => {
   }
 });
 
+router.post('/hint', authMiddleware, async (ctx) => {
+  const { roomCode, hintType } = ctx.request.body as { roomCode: string; hintType: 'continent' | 'country' };
+  if (!roomCode || !hintType) {
+    ctx.status = 400; ctx.body = { message: 'roomCode and hintType are required' }; return;
+  }
+  if (hintType !== 'continent' && hintType !== 'country') {
+    ctx.status = 400; ctx.body = { message: 'hintType must be continent or country' }; return;
+  }
+
+  try {
+    const result = await gameService().requestHint(ctx.state.userId, roomCode, hintType);
+    ctx.status = 200;
+    ctx.body = result;
+  } catch (err: unknown) {
+    ctx.status = 400;
+    ctx.body = { message: err instanceof Error ? err.message : 'Failed to get hint' };
+  }
+});
+
 export default router;

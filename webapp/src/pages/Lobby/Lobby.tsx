@@ -12,6 +12,7 @@ const DURATIONS = [
   { label: '2 min', value: 120 },
 ];
 
+
 export default function Lobby() {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ export default function Lobby() {
   const [gameMode, setGameMode] = useState<GameMode>('standard');
   const [duration, setDuration] = useState(60);
   const [rounds, setRounds] = useState(5);
+  const [hintsEnabled, setHintsEnabled] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -32,7 +34,7 @@ export default function Lobby() {
     setError('');
     setLoading(true);
     try {
-      const created = await createRoom(locationMode, gameMode, rounds, duration);
+      const created = await createRoom(locationMode, gameMode, rounds, duration, hintsEnabled);
       navigate(`/room/${created.code}`);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to create room');
@@ -58,18 +60,40 @@ export default function Lobby() {
 
   return (
     <div className="lobby-page">
+      {/* Left hero panel */}
       <div className="lobby-page__hero">
-        <h1 className="lobby-page__title">🌍 Open GeoGuessr</h1>
-        <p className="lobby-page__subtitle">
-          Guess locations from street-level photos around the world
-        </p>
+        <div className="lobby-page__orb lobby-page__orb--gold" />
+        <div className="lobby-page__orb lobby-page__orb--blue" />
+        <div className="lobby-page__orb lobby-page__orb--purple" />
+
+        <div className="lobby-page__hero-content">
+          <div className="lobby-page__logo">🌍</div>
+          <h1 className="lobby-page__title">Open GeoGuessr</h1>
+          <p className="lobby-page__subtitle">
+            Guess locations from street-level photos around the world. Challenge your friends and see who knows the globe best.
+          </p>
+          <div className="lobby-page__stats">
+            <div className="lobby-page__stat">
+              <span className="lobby-page__stat-num">∞</span>
+              <span className="lobby-page__stat-label">Locations</span>
+            </div>
+            <div className="lobby-page__stat-divider" />
+            <div className="lobby-page__stat">
+              <span className="lobby-page__stat-num">2</span>
+              <span className="lobby-page__stat-label">Game Modes</span>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div className="lobby-page__layout">
+      {/* Right forms panel */}
+      <div className="lobby-page__forms">
         {/* Create room */}
         <div className="lobby-page__card">
-          <h2>Create Room</h2>
-          <p className="lobby-page__card-desc">Start a game and share the code with friends</p>
+          <div className="lobby-page__card-header">
+            <h2>Create Room</h2>
+            <p className="lobby-page__card-desc">Configure and host a game</p>
+          </div>
 
           <div className="form-group">
             <label>Game Mode</label>
@@ -101,7 +125,7 @@ export default function Lobby() {
               >
                 <span className="lobby-page__mode-icon">🌍</span>
                 <span className="lobby-page__mode-name">Famous Landmarks</span>
-                <span className="lobby-page__mode-desc">Iconic locations from around the world</span>
+                <span className="lobby-page__mode-desc">Iconic locations worldwide</span>
               </button>
               <button
                 className={`lobby-page__mode-btn ${locationMode === 'world' ? 'lobby-page__mode-btn--active' : ''}`}
@@ -129,10 +153,31 @@ export default function Lobby() {
             </div>
           </div>
 
+          <div className="form-group">
+            <label>Hints</label>
+            <div className="lobby-page__toggle-row">
+              <button
+                className={`lobby-page__toggle-btn ${!hintsEnabled ? 'lobby-page__toggle-btn--active' : ''}`}
+                onClick={() => setHintsEnabled(false)}
+              >
+                🚫 Disabled
+              </button>
+              <button
+                className={`lobby-page__toggle-btn ${hintsEnabled ? 'lobby-page__toggle-btn--active' : ''}`}
+                onClick={() => setHintsEnabled(true)}
+              >
+                💡 Enabled
+              </button>
+            </div>
+            {hintsEnabled && (
+              <p className="lobby-page__hint">Each player can reveal the continent once and the country once per game.</p>
+            )}
+          </div>
+
           {gameMode === 'standard' && (
             <div className="form-group">
               <label>
-                Number of Rounds
+                Rounds
                 <span className="lobby-page__rounds-value">{rounds}</span>
               </label>
               <input
@@ -146,44 +191,38 @@ export default function Lobby() {
             </div>
           )}
 
-          <button
-            className="btn btn--primary btn--lg"
-            onClick={handleCreate}
-            disabled={loading}
-          >
-            {loading ? 'Creating...' : 'Create Room'}
+          <button className="btn btn--primary btn--lg lobby-page__create-btn" onClick={handleCreate} disabled={loading}>
+            {loading ? 'Creating...' : '+ Create Room'}
           </button>
         </div>
 
-        <div className="lobby-page__divider"><span>or</span></div>
+        <div className="lobby-page__divider"><span>or join existing</span></div>
 
         {/* Join room */}
-        <div className="lobby-page__card">
-          <h2>Join Room</h2>
-          <p className="lobby-page__card-desc">Enter a 6-character room code</p>
+        <div className="lobby-page__card lobby-page__card--join">
+          <div className="lobby-page__card-header">
+            <h2>Join Room</h2>
+            <p className="lobby-page__card-desc">Enter a 6-character room code</p>
+          </div>
 
           <form onSubmit={handleJoin} className="lobby-page__join-form">
             <input
               className="input lobby-page__code-input"
-              placeholder="ABCDEF"
+              placeholder="A B C 1 2 3"
               value={joinCode}
               onChange={(e) => setJoinCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
               maxLength={6}
               autoComplete="off"
               spellCheck={false}
             />
-            <button
-              className="btn btn--accent btn--lg"
-              type="submit"
-              disabled={loading || joinCode.length < 6}
-            >
-              {loading ? 'Joining...' : 'Join Room'}
+            <button className="btn btn--accent btn--lg" type="submit" disabled={loading || joinCode.length < 6}>
+              {loading ? 'Joining...' : 'Join →'}
             </button>
           </form>
         </div>
-      </div>
 
-      {error && <p className="error-text lobby-page__error">{error}</p>}
+        {error && <p className="error-text lobby-page__error">{error}</p>}
+      </div>
     </div>
   );
 }

@@ -28,3 +28,11 @@ export async function submitGuess(
 export async function nextRound(roomCode: string): Promise<void> {
   await client.post('/game/next-round', { roomCode });
 }
+
+export async function requestHint(
+  roomCode: string,
+  hintType: 'continent' | 'country',
+): Promise<{ value: string }> {
+  const { data } = await client.post<{ value: string }>('/game/hint', { roomCode, hintType });
+  return data;
+}

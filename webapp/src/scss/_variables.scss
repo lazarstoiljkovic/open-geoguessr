@@ -1,22 +1,28 @@
-$color-bg: #0f0f1a;
-$color-surface: #1a1a2e;
-$color-surface-2: #16213e;
-$color-primary: #4fc3f7;
-$color-primary-dark: #0288d1;
-$color-accent: #f7c948;
-$color-success: #4caf50;
-$color-danger: #ef5350;
-$color-text: #e8eaf6;
-$color-text-muted: #9fa8da;
-$color-border: rgba(255, 255, 255, 0.08);
+// Midnight Map — deep blue + warm gold (brighter)
+$color-bg:          #090b14;
+$color-surface:     #0f1320;
+$color-surface-2:   #141929;
+$color-surface-3:   #1a2035;
+$color-primary:     #f0c040;
+$color-primary-dark:#c89f28;
+$color-accent:      #5aabff;
+$color-success:     #4cdd8a;
+$color-danger:      #ff5f5f;
+$color-text:        #eef0f8;
+$color-text-muted:  #7a85b0;
+$color-border:      rgba(255, 255, 255, 0.08);
+$color-border-hover:rgba(240, 192, 64, 0.4);
 
-$border-radius: 12px;
+$border-radius:    12px;
 $border-radius-sm: 6px;
 $border-radius-lg: 20px;
 
-$font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+$font-body:    'DM Sans', system-ui, -apple-system, sans-serif;
+$font-heading: 'Space Grotesk', 'DM Sans', system-ui, sans-serif;
+$font-mono:    'Space Mono', 'JetBrains Mono', monospace;
+$font-family:  $font-body;
 
-$shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
-$shadow-lg: 0 8px 48px rgba(0, 0, 0, 0.6);
+$shadow:    0 4px 24px rgba(0, 0, 0, 0.5);
+$shadow-lg: 0 8px 48px rgba(0, 0, 0, 0.7);
 
 $transition: 0.2s ease;

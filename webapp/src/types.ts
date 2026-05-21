@@ -67,6 +67,7 @@ export interface Room {
   locationMode: LocationMode;
   gameMode: GameMode;
   eliminatedPlayerIds: string[];
+  hintsEnabled: boolean;
 }
 
 export interface LeaderboardEntry {

@@ -15,6 +15,7 @@ export class RoomService {
     gameMode: GameMode = 'standard',
     totalRounds = 5,
     roundDurationSeconds = 60,
+    hintsEnabled = false,
   ) {
     const code = generateRoomCode();
 
@@ -36,6 +37,7 @@ export class RoomService {
       roundDurationSeconds,
       locationMode,
       gameMode,
+      hintsEnabled,
     });
 
     return room;

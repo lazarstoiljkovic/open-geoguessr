@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useGame } from '../../context/GameContext';
@@ -16,6 +16,7 @@ export default function Room() {
   const { user, isAuthenticated } = useAuth();
   const { room, status, joinRoom, startGame, leaveRoom, isStarting } = useGame();
   const navigate = useNavigate();
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated) { navigate('/login'); return; }
@@ -27,6 +28,14 @@ export default function Room() {
       navigate(`/game/${code}`);
     }
   }, [status, code, navigate]);
+
+  const handleCopy = () => {
+    if (!room) return;
+    navigator.clipboard.writeText(room.code).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
 
   if (!room) {
     return (
@@ -45,7 +54,12 @@ export default function Room() {
       <div className="room-page__header">
         <div className="room-page__code-block">
           <span className="room-page__code-label">Room Code</span>
-          <span className="room-page__code">{room.code}</span>
+          <div className="room-page__code-row">
+            <span className="room-page__code">{room.code}</span>
+            <button className={`room-page__copy-btn${copied ? ' room-page__copy-btn--copied' : ''}`} onClick={handleCopy}>
+              {copied ? '✓ Copied' : 'Copy'}
+            </button>
+          </div>
         </div>
         <button className="btn btn--secondary" onClick={() => { leaveRoom(); navigate('/'); }}>
           Leave
@@ -54,34 +68,47 @@ export default function Room() {
 
       <div className="room-page__body">
         <div className="room-page__players">
-          <h2>Players ({room.players.length})</h2>
+          <h2>Players <span className="room-page__player-count">{room.players.length}</span></h2>
           <Scoreboard players={room.players} currentUserId={user?.id} />
         </div>
 
         <div className="room-page__sidebar">
-          <div className="room-page__info">
-            <div className="room-page__info-row">
-              <span>Game Mode</span>
-              <span>{isElimination ? '⚔️ Elimination' : '🎯 Standard'}</span>
+          <div className="room-page__settings-chips">
+            <div className="room-page__chip">
+              <span className="room-page__chip-icon">{isElimination ? '⚔️' : '🎯'}</span>
+              <div>
+                <div className="room-page__chip-label">Game Mode</div>
+                <div className="room-page__chip-value">{isElimination ? 'Elimination' : 'Standard'}</div>
+              </div>
             </div>
-            <div className="room-page__info-row">
-              <span>Locations</span>
-              <span>{room.locationMode === 'world' ? '🌏 Random World' : '🌍 Famous'}</span>
+            <div className="room-page__chip">
+              <span className="room-page__chip-icon">{room.locationMode === 'world' ? '🌏' : '🌍'}</span>
+              <div>
+                <div className="room-page__chip-label">Locations</div>
+                <div className="room-page__chip-value">{room.locationMode === 'world' ? 'Random World' : 'Famous'}</div>
+              </div>
             </div>
-            <div className="room-page__info-row">
-              <span>Rounds</span>
-              <span>{isElimination ? '∞' : room.totalRounds}</span>
+            <div className="room-page__chip">
+              <span className="room-page__chip-icon">🔄</span>
+              <div>
+                <div className="room-page__chip-label">Rounds</div>
+                <div className="room-page__chip-value">{isElimination ? '∞' : room.totalRounds}</div>
+              </div>
             </div>
-            <div className="room-page__info-row">
-              <span>Time per round</span>
-              <span>{formatDuration(room.roundDurationSeconds)}</span>
+            <div className="room-page__chip">
+              <span className="room-page__chip-icon">⏱</span>
+              <div>
+                <div className="room-page__chip-label">Per Round</div>
+                <div className="room-page__chip-value">{formatDuration(room.roundDurationSeconds)}</div>
+              </div>
             </div>
-            {isElimination && (
-              <p className="room-page__mode-hint">
-                Worst guesser each round is eliminated. Last one standing wins.
-              </p>
-            )}
           </div>
+
+          {isElimination && (
+            <p className="room-page__mode-hint">
+              Worst guesser each round is eliminated. Last one standing wins.
+            </p>
+          )}
 
           {isHost ? (
             <div className="room-page__host-actions">

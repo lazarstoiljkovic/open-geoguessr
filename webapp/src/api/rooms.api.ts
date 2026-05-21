@@ -15,8 +15,9 @@ export async function createRoom(
   gameMode: GameMode = 'standard',
   totalRounds = 5,
   roundDurationSeconds = 60,
+  hintsEnabled = false,
 ): Promise<Room> {
-  const { data } = await client.post<{ room: Room }>('/rooms/create', { locationMode, gameMode, totalRounds, roundDurationSeconds });
+  const { data } = await client.post<{ room: Room }>('/rooms/create', { locationMode, gameMode, totalRounds, roundDurationSeconds, hintsEnabled });
   return data.room;
 }
 

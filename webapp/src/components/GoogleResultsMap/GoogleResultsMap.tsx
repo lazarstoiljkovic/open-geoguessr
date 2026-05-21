@@ -11,24 +11,55 @@ interface Props {
   players: Player[];
 }
 
-const COLORS = ['#4fc3f7', '#f7c948', '#a78bfa', '#34d399', '#f87171', '#fb923c'];
+const COLORS = ['#f0c040', '#5aabff', '#a78bfa', '#4cdd8a', '#ff5f5f', '#fb923c', '#f472b6', '#34d399'];
 
 function makePlayerPin(color: string, initials: string): string {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="38" height="50" viewBox="0 0 38 50">
-    <circle cx="19" cy="19" r="17" fill="${color}" stroke="white" stroke-width="2.5"/>
-    <text x="19" y="25" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="white">${initials}</text>
-    <polygon points="19,50 13,32 25,32" fill="${color}"/>
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="52" viewBox="0 0 40 52">
+    <circle cx="20" cy="20" r="18" fill="${color}" stroke="white" stroke-width="2"/>
+    <text x="20" y="26" text-anchor="middle" font-family="Space Grotesk,Arial,sans-serif" font-weight="700" font-size="13" fill="white">${initials}</text>
+    <polygon points="20,52 13,34 27,34" fill="${color}"/>
   </svg>`;
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
 }
 
 function makeCorrectPin(): string {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="38" height="50" viewBox="0 0 38 50">
-    <circle cx="19" cy="19" r="17" fill="#ef4444" stroke="white" stroke-width="2.5"/>
-    <text x="19" y="26" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="18" fill="white">&#9733;</text>
-    <polygon points="19,50 13,32 25,32" fill="#ef4444"/>
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="52" viewBox="0 0 40 52">
+    <circle cx="20" cy="20" r="18" fill="#ef4444" stroke="white" stroke-width="2"/>
+    <text x="20" y="27" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" font-size="20" fill="white">★</text>
+    <polygon points="20,52 13,34 27,34" fill="#ef4444"/>
   </svg>`;
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+}
+
+function animateLine(
+  map: google.maps.Map,
+  from: google.maps.LatLng,
+  to: google.maps.LatLng,
+  color: string,
+  delayMs: number,
+): void {
+  setTimeout(() => {
+    const line = new google.maps.Polyline({
+      path: [from],
+      strokeColor: color,
+      strokeOpacity: 0.9,
+      strokeWeight: 2.5,
+      map,
+    });
+
+    let step = 0;
+    const STEPS = 50;
+    const INTERVAL = 12;
+
+    const timer = setInterval(() => {
+      step++;
+      const t = step / STEPS;
+      const lat = from.lat() + (to.lat() - from.lat()) * t;
+      const lng = from.lng() + (to.lng() - from.lng()) * t;
+      line.setPath([from, new google.maps.LatLng(lat, lng)]);
+      if (step >= STEPS) clearInterval(timer);
+    }, INTERVAL);
+  }, delayMs);
 }
 
 export default function GoogleResultsMap({ guesses, correctLat, correctLng, players }: Props) {
@@ -59,8 +90,8 @@ export default function GoogleResultsMap({ guesses, correctLat, correctLng, play
         map,
         icon: {
           url: makeCorrectPin(),
-          scaledSize: new google.maps.Size(38, 50),
-          anchor: new google.maps.Point(19, 50),
+          scaledSize: new google.maps.Size(40, 52),
+          anchor: new google.maps.Point(20, 52),
         },
         title: 'Correct location',
         zIndex: 1000,
@@ -68,44 +99,35 @@ export default function GoogleResultsMap({ guesses, correctLat, correctLng, play
 
       const infoWindow = new google.maps.InfoWindow({ disableAutoPan: true });
 
+      // Place markers + animate lines sequentially
       guesses.forEach((guess, i) => {
         const player = players.find((p) => p.userId === guess.userId);
         const username = player?.username ?? 'Player';
         const initials = username.slice(0, 2).toUpperCase();
         const color = COLORS[i % COLORS.length];
         const pos = new google.maps.LatLng(guess.lat, guess.lng);
-
         bounds.extend(pos);
 
-        new google.maps.Polyline({
-          path: [pos, correctPos],
-          strokeColor: color,
-          strokeOpacity: 0,
-          strokeWeight: 0,
-          icons: [{
-            icon: {
-              path: 'M 0,-1 0,1',
-              strokeOpacity: 0.9,
-              strokeColor: color,
-              scale: 3,
-            },
-            offset: '0',
-            repeat: '12px',
-          }],
-          map,
-        });
+        // Animate line with staggered delay
+        animateLine(map, pos, correctPos, color, i * 350);
 
         const marker = new google.maps.Marker({
           position: pos,
           map,
           icon: {
             url: makePlayerPin(color, initials),
-            scaledSize: new google.maps.Size(38, 50),
-            anchor: new google.maps.Point(19, 50),
+            scaledSize: new google.maps.Size(40, 52),
+            anchor: new google.maps.Point(20, 52),
           },
           title: username,
           zIndex: 100 + i,
+          opacity: 0,
         });
+
+        // Fade marker in after line finishes drawing
+        setTimeout(() => {
+          if (!cancelled) marker.setOpacity(1);
+        }, i * 350 + 600);
 
         const distText = guess.distanceKm < 1
           ? `${Math.round(guess.distanceKm * 1000)} m`
@@ -114,21 +136,21 @@ export default function GoogleResultsMap({ guesses, correctLat, correctLng, play
         marker.addListener('mouseover', () => {
           infoWindow.setContent(
             `<div style="
-              font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-              background:#1a1d27;
+              font-family:'Space Grotesk','DM Sans',system-ui,sans-serif;
+              background:#0f1320;
               border:1px solid ${color}55;
               border-radius:10px;
               padding:10px 14px;
               min-width:160px;
-              box-shadow:0 4px 16px rgba(0,0,0,0.5);
+              box-shadow:0 4px 20px rgba(0,0,0,0.6);
             ">
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
                 <div style="width:10px;height:10px;border-radius:50%;background:${color};flex-shrink:0"></div>
-                <span style="font-weight:700;font-size:14px;color:#f0f0f0">${username}</span>
+                <span style="font-weight:700;font-size:14px;color:#eef0f8">${username}</span>
               </div>
               <div style="display:flex;justify-content:space-between;align-items:center;gap:16px">
-                <span style="color:#9ca3af;font-size:12px">📍 ${distText} away</span>
-                <span style="font-weight:700;font-size:15px;color:${color}">+${guess.roundScore}</span>
+                <span style="color:#7a85b0;font-size:12px">📍 ${distText} away</span>
+                <span style="font-weight:800;font-size:16px;color:${color}">+${guess.roundScore}</span>
               </div>
             </div>`,
           );
@@ -138,7 +160,7 @@ export default function GoogleResultsMap({ guesses, correctLat, correctLng, play
       });
 
       if (guesses.length > 0) {
-        map.fitBounds(bounds, 80);
+        setTimeout(() => { if (!cancelled) map.fitBounds(bounds, 80); }, 200);
       }
     });
 

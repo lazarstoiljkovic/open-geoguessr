@@ -146,7 +146,8 @@ export class GameHandler {
   private serializeRoom(room: {
     _id: unknown; code: string; status: string; hostId: string;
     players: unknown; totalRounds: number; currentRoundIndex: number;
-    roundDurationSeconds: number; locationMode?: string; gameMode?: string; eliminatedPlayerIds?: string[];
+    roundDurationSeconds: number; locationMode?: string; gameMode?: string;
+    eliminatedPlayerIds?: string[]; hintsEnabled?: boolean;
   }) {
     return {
       id: room._id,
@@ -160,6 +161,7 @@ export class GameHandler {
       locationMode: room.locationMode ?? 'famous',
       gameMode: room.gameMode ?? 'standard',
       eliminatedPlayerIds: room.eliminatedPlayerIds ?? [],
+      hintsEnabled: room.hintsEnabled ?? false,
     };
   }
 }

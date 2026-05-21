@@ -9,11 +9,14 @@ import { DistanceScoringStrategy } from 'src/patterns/scoring/distance.strategy'
 import { COUNTDOWN_SECONDS } from 'src/constants';
 import { EliminationRoundResult, GameMode, Location, Round } from 'src/types';
 import { IRoom } from 'src/database/models/room.model';
+import axios from 'axios';
 
 export type RoundWithLocation = Round & { location: Location };
 
 const roundTimers = new Map<string, NodeJS.Timeout>();
 const countdownTimers = new Map<string, NodeJS.Timeout>();
+// roomCode -> userId -> Set of used hint types
+const hintUsage = new Map<string, Map<string, Set<string>>>();
 
 @Service()
 export class GameService {
@@ -46,6 +49,7 @@ export class GameService {
 
     await this.roomRepository.initGame(room._id.toString(), rounds, locationMode, roundDurationSeconds, gameMode);
     await this.roomRepository.setStatus(room._id.toString(), 'countdown');
+    hintUsage.set(roomCode, new Map());
 
     broadcastToRoom(roomCode, 'game_countdown', { seconds: COUNTDOWN_SECONDS });
 
@@ -291,6 +295,39 @@ export class GameService {
     broadcastToRoom(roomCode, 'game_over', {
       players: finalRoom.players.sort((a, b) => b.score - a.score),
     });
+  }
+
+  // ── Hints ──────────────────────────────────────────────────────────────────
+
+  async requestHint(userId: string, roomCode: string, hintType: 'continent' | 'country'): Promise<{ value: string }> {
+    const room = await this.roomRepository.findByCode(roomCode);
+    if (!room) throw new Error('Room not found');
+    if (!room.hintsEnabled) throw new Error('Hints are not enabled for this room');
+    if (room.status !== 'playing') throw new Error('No round in progress');
+
+    const round = room.rounds[room.currentRoundIndex];
+    if (!round?.location) throw new Error('Round has no location');
+
+    const roomHints = hintUsage.get(roomCode) ?? new Map<string, Set<string>>();
+    const userHints = roomHints.get(userId) ?? new Set<string>();
+
+    if (userHints.has(hintType)) throw new Error(`You already used the ${hintType} hint`);
+
+    userHints.add(hintType);
+    roomHints.set(userId, userHints);
+    hintUsage.set(roomCode, roomHints);
+
+    const { lat, lng } = round.location;
+    const geoRes = await axios.get('https://api.bigdatacloud.net/data/reverse-geocode-client', {
+      params: { latitude: lat, longitude: lng, localityLanguage: 'en' },
+      timeout: 5000,
+    });
+
+    const value = hintType === 'country'
+      ? (geoRes.data.countryName ?? 'Unknown')
+      : (geoRes.data.continent ?? 'Unknown');
+
+    return { value };
   }
 
   // ── Serialization ──────────────────────────────────────────────────────────

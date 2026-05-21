@@ -8,15 +8,16 @@ const router = new Router({ prefix: '/rooms' });
 const roomService = () => Container.get(RoomService);
 
 router.post('/create', authMiddleware, async (ctx) => {
-  const { locationMode, gameMode, totalRounds, roundDurationSeconds } = ctx.request.body as {
+  const { locationMode, gameMode, totalRounds, roundDurationSeconds, hintsEnabled } = ctx.request.body as {
     locationMode?: LocationMode;
     gameMode?: GameMode;
     totalRounds?: number;
     roundDurationSeconds?: number;
+    hintsEnabled?: boolean;
   };
   const room = await roomService().createRoom(
     ctx.state.userId, ctx.state.username,
-    locationMode, gameMode, totalRounds, roundDurationSeconds,
+    locationMode, gameMode, totalRounds, roundDurationSeconds, hintsEnabled ?? false,
   );
   ctx.status = 201;
   ctx.body = { room: { id: room._id, code: room.code, status: room.status, players: room.players, totalRounds: room.totalRounds } };

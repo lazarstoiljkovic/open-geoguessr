@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useState } from 'react';
+import React, { useEffect, useCallback, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useGame } from '../../context/GameContext';
@@ -16,6 +16,28 @@ import useCountdown from '../../hooks/useCountdown';
 import { MAPILLARY_TOKEN, GOOGLE_MAPS_KEY } from '../../env';
 import './Game.scss';
 
+function useCountUp(target: number, duration = 1200) {
+  const [val, setVal] = useState(0);
+  const prev = useRef(0);
+  useEffect(() => {
+    const from = prev.current;
+    prev.current = target;
+    if (target === 0) { setVal(0); return; }
+    let start: number | null = null;
+    const step = (ts: number) => {
+      if (!start) start = ts;
+      const p = Math.min((ts - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - p, 3);
+      setVal(Math.round(from + (target - from) * eased));
+      if (p < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }, [target, duration]);
+  return val;
+}
+
+const AVATAR_COLORS = ['#f0c040', '#5aabff', '#a78bfa', '#4cdd8a', '#ff5f5f', '#fb923c', '#f472b6', '#34d399'];
+
 export default function Game() {
   const { code } = useParams<{ code: string }>();
   const { user, isAuthenticated } = useAuth();
@@ -25,22 +47,32 @@ export default function Game() {
     allRoundResults, messages, sendMessage, eliminatedPlayerIds, livePlayerPins, broadcastPinMove,
     joinRoom, submitGuess, nextRound, leaveRoom,
     isSubmittingGuess, isAdvancingRound,
+    requestHint, hintResults, usedHints,
   } = useGame();
   const navigate = useNavigate();
   const [expandedPlayer, setExpandedPlayer] = useState<string | null>(null);
   const [followingUserId, setFollowingUserId] = useState<string | null>(null);
+  const [chatOpen, setChatOpen] = useState(false);
 
   const isEliminated = eliminatedPlayerIds.includes(user?.id ?? '');
 
   const timeLeft = useCountdown(durationSeconds, status === 'playing' && !myGuess, currentRound?.startedAt);
 
+  // Score count-up for round results
+  const myRoundGuessScore = (() => {
+    if (status === 'round_results' && roundResults) {
+      const g = roundResults.round.guesses.find((g) => g.userId === user?.id);
+      return g?.roundScore ?? 0;
+    }
+    return 0;
+  })();
+  const animatedScore = useCountUp(myRoundGuessScore);
+
   useEffect(() => {
     if (!isAuthenticated) { navigate('/login'); return; }
-    // Always join via WebSocket (reconnects and gets catch-up events from server)
     if (code) joinRoom(code);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Only redirect to lobby when we have confirmed room data and status is waiting
   useEffect(() => {
     if (room && status === 'waiting') navigate(`/room/${code}`);
   }, [room, status, code, navigate]);
@@ -85,22 +117,50 @@ export default function Game() {
   if (status === 'game_over' && finalResults) {
     const MEDALS = ['🥇', '🥈', '🥉'];
     const sorted = [...finalResults.players].sort((a, b) => b.score - a.score);
-    const winner = sorted[0];
+    const podium = sorted.slice(0, 3);
+
+    // Podium order: 2nd | 1st | 3rd
+    const podiumOrder = [podium[1], podium[0], podium[2]].filter(Boolean);
+    const podiumRanks = [2, 1, 3];
+    const podiumHeights = [110, 140, 90];
 
     return (
       <div className="game-page game-page--results">
         <div className="game-page__final-card">
           <h1 className="game-page__final-title">🏆 Game Over!</h1>
-          <p className="game-page__final-winner">
-            Winner: <strong>{winner.username}</strong> with {winner.score.toLocaleString()} pts
-          </p>
 
+          {/* Podium */}
+          <div className="game-page__podium">
+            {podiumOrder.map((player, i) => {
+              if (!player) return null;
+              const rank = podiumRanks[i];
+              const height = podiumHeights[i];
+              const colorIdx = sorted.indexOf(player);
+              const color = AVATAR_COLORS[colorIdx % AVATAR_COLORS.length];
+              const initials = player.username.slice(0, 2).toUpperCase();
+              const isMe = player.userId === user?.id;
+              return (
+                <div key={player.userId} className={`game-page__podium-place game-page__podium-place--${rank}`}>
+                  <div className="game-page__podium-avatar" style={{ background: `${color}22`, border: `2px solid ${color}`, color }}>
+                    {initials}
+                    {isMe && <span className="game-page__podium-you">you</span>}
+                  </div>
+                  <div className="game-page__podium-name">{player.username}</div>
+                  <div className="game-page__podium-score" style={{ color }}>{player.score.toLocaleString()}</div>
+                  <div className="game-page__podium-bar" style={{ height, background: `${color}22`, borderColor: color }}>
+                    <span className="game-page__podium-medal">{MEDALS[rank - 1]}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* All players accordion with round breakdown */}
           <div className="game-page__player-list">
             {sorted.map((player, idx) => {
               const isMe = player.userId === user?.id;
               const isOpen = expandedPlayer === player.userId;
               const medal = idx < 3 ? MEDALS[idx] : `${idx + 1}.`;
-
               return (
                 <div
                   key={player.userId}
@@ -119,7 +179,6 @@ export default function Game() {
                     <span className="game-page__player-score">{player.score.toLocaleString()}</span>
                     <span className="game-page__chevron">{isOpen ? '▲' : '▼'}</span>
                   </button>
-
                   {isOpen && (
                     <div className="game-page__player-rounds">
                       {allRoundResults.length === 0 ? (
@@ -212,7 +271,7 @@ export default function Game() {
                       : `${Math.round(myRoundGuess.distanceKm).toLocaleString()} km away`}
                   </div>
                 </div>
-                <span className="game-page__my-score">+{myRoundGuess.roundScore}</span>
+                <span className="game-page__my-score">+{animatedScore}</span>
               </div>
             ) : (
               <div className="game-page__no-guess">No guess submitted this round</div>
@@ -280,15 +339,14 @@ export default function Game() {
             <div className="game-page__round-info">
               {isEliminationMode ? (
                 <>
-                  Round {roundIndex + 1}
-                  <span className="game-page__hud-sep">·</span>
+                  <span className="game-page__round-pill">Round {roundIndex + 1}</span>
                   <span className="game-page__remaining">{remainingCount} remaining</span>
                   {isEliminated && <span className="game-page__spectating-badge">👁 Spectating</span>}
                 </>
               ) : (
                 <>
-                  Round {roundIndex + 1} / {totalRounds}
-                  {useGoogle && <span className="game-page__mapillary-badge">🌐 Google Street View</span>}
+                  <span className="game-page__round-pill">Round {roundIndex + 1} / {totalRounds}</span>
+                  {useGoogle && <span className="game-page__mapillary-badge">🌐 Street View</span>}
                   {useMapillary && <span className="game-page__mapillary-badge">🌐 Mapillary</span>}
                 </>
               )}
@@ -299,7 +357,6 @@ export default function Game() {
           </div>
 
           {isEliminated ? (
-            // ── Spectator view for eliminated players ─────────────────────
             <div className="game-page__play-area game-page__play-area--spectator">
               <div className="game-page__location-pane">
                 {useGoogle ? (
@@ -310,11 +367,23 @@ export default function Game() {
                   <LocationGallery images={galleryImages} alt="Guess this location" />
                 )}
                 <div className="game-page__spectator-banner">
-                  You've been eliminated — watch the remaining players!
+                  You've been eliminated — watch the remaining players
                 </div>
-                <div className="game-page__chat-float">
-                  <Chat messages={messages} currentUserId={user?.id} onSend={sendMessage} />
-                </div>
+                {chatOpen ? (
+                  <div className="game-page__chat-float">
+                    <button className="game-page__chat-toggle" onClick={() => setChatOpen(false)}>
+                      <span>💬 Chat</span>
+                      <span className="game-page__chat-chevron">▼</span>
+                    </button>
+                    <Chat messages={messages} currentUserId={user?.id} onSend={sendMessage} />
+                  </div>
+                ) : (
+                  <button className="game-page__chat-pill" onClick={() => setChatOpen(true)}>
+                    <span>💬 Chat</span>
+                    {messages.length > 0 && <span className="game-page__chat-badge">{messages.length}</span>}
+                    <span className="game-page__chat-chevron">▲</span>
+                  </button>
+                )}
               </div>
               <div className="game-page__spectator-map-pane">
                 <SpectatorMap
@@ -326,7 +395,6 @@ export default function Game() {
               </div>
             </div>
           ) : (
-            // ── Normal playing view ────────────────────────────────────────
             <div className="game-page__play-area">
               <div className="game-page__location-pane">
                 {useGoogle ? (
@@ -335,6 +403,25 @@ export default function Game() {
                   <MapillaryViewer imageId={mapillaryId!} accessToken={MAPILLARY_TOKEN} />
                 ) : (
                   <LocationGallery images={galleryImages} alt="Guess this location" />
+                )}
+
+                {room?.hintsEnabled && (
+                  <div className="game-page__hints">
+                    <button
+                      className={`game-page__hint-btn${usedHints.has('continent') ? ' game-page__hint-btn--used' : ''}`}
+                      onClick={() => requestHint('continent')}
+                      disabled={usedHints.has('continent')}
+                    >
+                      {hintResults.continent ? `🌍 ${hintResults.continent}` : '🌍 Continent'}
+                    </button>
+                    <button
+                      className={`game-page__hint-btn${usedHints.has('country') ? ' game-page__hint-btn--used' : ''}`}
+                      onClick={() => requestHint('country')}
+                      disabled={usedHints.has('country')}
+                    >
+                      {hintResults.country ? `🏳️ ${hintResults.country}` : '🏳️ Country'}
+                    </button>
+                  </div>
                 )}
 
                 {myGuessResult ? (
@@ -355,9 +442,21 @@ export default function Game() {
                   <GuessMap onGuess={handleGuess} disabled={!!myGuess || isSubmittingGuess} myGuess={myGuess} />
                 )}
 
-                <div className="game-page__chat-float">
-                  <Chat messages={messages} currentUserId={user?.id} onSend={sendMessage} />
-                </div>
+                {chatOpen ? (
+                  <div className="game-page__chat-float">
+                    <button className="game-page__chat-toggle" onClick={() => setChatOpen(false)}>
+                      <span>💬 Chat</span>
+                      <span className="game-page__chat-chevron">▼</span>
+                    </button>
+                    <Chat messages={messages} currentUserId={user?.id} onSend={sendMessage} />
+                  </div>
+                ) : (
+                  <button className="game-page__chat-pill" onClick={() => setChatOpen(true)}>
+                    <span>💬 Chat</span>
+                    {messages.length > 0 && <span className="game-page__chat-badge">{messages.length}</span>}
+                    <span className="game-page__chat-chevron">▲</span>
+                  </button>
+                )}
               </div>
             </div>
           )}

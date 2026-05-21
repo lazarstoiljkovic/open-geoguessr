@@ -4,76 +4,270 @@
 .lobby-page {
   flex: 1;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 40px 24px;
-  gap: 40px;
+  flex-direction: row;
+  min-height: 100%;
+  overflow: hidden;
+
+  @media (max-width: 860px) {
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  // ── Hero panel (left) ──────────────────────────────────────────────────
 
   &__hero {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    min-height: 280px;
+    // Subtle dot grid texture
+    background-image: radial-gradient(rgba(90, 171, 255, 0.07) 1px, transparent 1px);
+    background-size: 28px 28px;
+
+    @media (max-width: 860px) {
+      padding: 40px 24px 32px;
+    }
+  }
+
+  // ── Floating orbs ──────────────────────────────────────────────────────
+
+  &__orb {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    filter: blur(80px);
+  }
+
+  &__orb--gold {
+    width: 480px;
+    height: 480px;
+    background: radial-gradient(circle, rgba(240, 192, 64, 0.18) 0%, transparent 70%);
+    top: -120px;
+    left: -80px;
+    animation: orb-drift-a 14s ease-in-out infinite alternate;
+  }
+
+  &__orb--blue {
+    width: 560px;
+    height: 560px;
+    background: radial-gradient(circle, rgba(90, 171, 255, 0.14) 0%, transparent 70%);
+    bottom: -160px;
+    right: -100px;
+    animation: orb-drift-b 18s ease-in-out infinite alternate;
+  }
+
+  &__orb--purple {
+    width: 320px;
+    height: 320px;
+    background: radial-gradient(circle, rgba(167, 139, 250, 0.1) 0%, transparent 70%);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    animation: orb-drift-c 22s ease-in-out infinite alternate;
+  }
+
+  @keyframes orb-drift-a {
+    from { transform: translate(0, 0) scale(1); }
+    to   { transform: translate(70px, 50px) scale(1.12); }
+  }
+
+  @keyframes orb-drift-b {
+    from { transform: translate(0, 0) scale(1); }
+    to   { transform: translate(-60px, -40px) scale(1.08); }
+  }
+
+  @keyframes orb-drift-c {
+    from { transform: translate(-50%, -50%) scale(1); }
+    to   { transform: translate(-40%, -60%) scale(1.15); }
+  }
+
+  &__hero-content {
+    position: relative;
+    z-index: 1;
     text-align: center;
+    padding: 32px 40px;
+    max-width: 480px;
+  }
+
+  &__logo {
+    font-size: 56px;
+    margin-bottom: 16px;
+    filter: drop-shadow(0 0 20px rgba(90, 171, 255, 0.4));
+    animation: float 4s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50%       { transform: translateY(-8px); }
   }
 
   &__title {
-    font-size: 44px;
+    font-family: $font-heading;
+    font-size: 42px;
     font-weight: 800;
-    letter-spacing: -1px;
-    margin-bottom: 10px;
+    letter-spacing: -1.5px;
+    margin-bottom: 14px;
+    background: linear-gradient(135deg, $color-primary 0%, #fad860 40%, $color-accent 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.1;
   }
 
   &__subtitle {
     color: $color-text-muted;
     font-size: 15px;
-    max-width: 480px;
+    line-height: 1.7;
+    margin-bottom: 32px;
   }
 
-  // ── Main layout ────────────────────────────────────────────────────────
-
-  &__layout {
+  &__stats {
     display: flex;
-    align-items: stretch;
-    width: 100%;
-    max-width: 860px;
+    align-items: center;
+    justify-content: center;
     gap: 0;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid $color-border;
+    border-radius: $border-radius;
+    overflow: hidden;
+  }
 
-    @media (max-width: 680px) {
-      flex-direction: column;
+  &__stat {
+    flex: 1;
+    padding: 14px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+  }
+
+  &__stat-num {
+    font-family: $font-heading;
+    font-size: 22px;
+    font-weight: 800;
+    color: $color-primary;
+    line-height: 1;
+  }
+
+  &__stat-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: $color-text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  &__stat-divider {
+    width: 1px;
+    height: 40px;
+    background: $color-border;
+    flex-shrink: 0;
+  }
+
+  // ── Forms panel (right) ────────────────────────────────────────────────
+
+  &__forms {
+    width: 420px;
+    flex-shrink: 0;
+    overflow-y: auto;
+    padding: 32px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    background: $color-surface;
+    border-left: 1px solid $color-border;
+
+    @media (max-width: 860px) {
+      width: 100%;
+      border-left: none;
+      border-top: 1px solid $color-border;
     }
   }
 
   &__card {
-    @include card;
-    flex: 1;
-    padding: 28px 28px 32px;
     display: flex;
     flex-direction: column;
     gap: 18px;
+  }
 
+  &__card-header {
     h2 {
+      font-family: $font-heading;
       font-size: 20px;
       font-weight: 700;
+      letter-spacing: -0.3px;
     }
   }
 
   &__card-desc {
     color: $color-text-muted;
     font-size: 13px;
-    margin-top: -10px;
+    margin-top: 2px;
   }
 
   &__divider {
-    @include flex-center;
-    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 20px 0;
     color: $color-text-muted;
-    font-size: 13px;
-    font-weight: 600;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: $font-heading;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
 
-    @media (max-width: 680px) {
-      padding: 12px 0;
+    &::before, &::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: $color-border;
     }
   }
 
-  // ── Mode buttons ────────────────────────────────────────────────────────
+  // ── Game mode toggle ───────────────────────────────────────────────────
+
+  &__toggle-row {
+    display: flex;
+    gap: 6px;
+  }
+
+  &__toggle-btn {
+    flex: 1;
+    padding: 9px 12px;
+    background: $color-surface-2;
+    border: 1.5px solid $color-border;
+    border-radius: $border-radius-sm;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: $font-heading;
+    color: $color-text-muted;
+    transition: all $transition;
+
+    &:hover { border-color: rgba(240, 192, 64, 0.3); color: $color-text; }
+
+    &--active {
+      border-color: $color-primary;
+      background: rgba(240, 192, 64, 0.1);
+      color: $color-primary;
+    }
+  }
+
+  &__hint {
+    font-size: 11px;
+    color: $color-text-muted;
+    padding: 7px 10px;
+    background: rgba(90, 171, 255, 0.06);
+    border: 1px solid rgba(90, 171, 255, 0.18);
+    border-radius: 6px;
+    line-height: 1.5;
+  }
+
+  // ── Location buttons ───────────────────────────────────────────────────
 
   &__modes {
     display: grid;
@@ -86,33 +280,31 @@
     flex-direction: column;
     align-items: center;
     gap: 4px;
-    padding: 16px 12px;
+    padding: 14px 10px;
     background: $color-surface-2;
-    border: 2px solid $color-border;
+    border: 1.5px solid $color-border;
     border-radius: $border-radius-sm;
     cursor: pointer;
     transition: all $transition;
-    color: $color-text;
+    color: $color-text-muted;
     text-align: center;
 
-    &:hover {
-      border-color: rgba(79, 195, 247, 0.4);
-      background: rgba(79, 195, 247, 0.04);
-    }
+    &:hover { border-color: rgba(240, 192, 64, 0.3); color: $color-text; }
 
     &--active {
       border-color: $color-primary;
-      background: rgba(79, 195, 247, 0.08);
+      background: rgba(240, 192, 64, 0.07);
+      color: $color-text;
     }
   }
 
-  &__mode-icon {
-    font-size: 28px;
-  }
+  &__mode-icon { font-size: 24px; }
 
   &__mode-name {
     font-size: 12px;
     font-weight: 700;
+    font-family: $font-heading;
+    color: inherit;
   }
 
   &__mode-desc {
@@ -121,74 +313,33 @@
     line-height: 1.3;
   }
 
-  // ── Duration pills ──────────────────────────────────────────────────────
+  // ── Duration pills ─────────────────────────────────────────────────────
 
   &__durations {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     flex-wrap: wrap;
   }
 
   &__duration-pill {
-    padding: 7px 18px;
+    padding: 6px 16px;
     background: $color-surface-2;
-    border: 2px solid $color-border;
+    border: 1.5px solid $color-border;
     border-radius: 100px;
     cursor: pointer;
-    font-size: 13px;
-    font-weight: 600;
-    color: $color-text;
-    transition: all $transition;
-
-    &:hover {
-      border-color: rgba(79, 195, 247, 0.4);
-    }
-
-    &--active {
-      border-color: $color-primary;
-      background: rgba(79, 195, 247, 0.08);
-      color: $color-primary;
-    }
-  }
-
-  // ── Game mode toggle ───────────────────────────────────────────────────
-
-  &__toggle-row {
-    display: flex;
-    gap: 8px;
-  }
-
-  &__toggle-btn {
-    flex: 1;
-    padding: 9px 12px;
-    background: $color-surface-2;
-    border: 2px solid $color-border;
-    border-radius: $border-radius-sm;
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 600;
-    color: $color-text;
-    transition: all $transition;
-    white-space: nowrap;
-
-    &:hover { border-color: rgba(79, 195, 247, 0.4); }
-
-    &--active {
-      border-color: $color-primary;
-      background: rgba(79, 195, 247, 0.08);
-      color: $color-primary;
-    }
-  }
-
-  &__hint {
-    font-size: 11px;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: $font-heading;
     color: $color-text-muted;
-    margin-top: 6px;
-    padding: 6px 10px;
-    background: rgba(247, 201, 72, 0.07);
-    border: 1px solid rgba(247, 201, 72, 0.2);
-    border-radius: 6px;
-    line-height: 1.4;
+    transition: all $transition;
+
+    &:hover { border-color: rgba(240, 192, 64, 0.3); color: $color-text; }
+
+    &--active {
+      border-color: $color-primary;
+      background: rgba(240, 192, 64, 0.1);
+      color: $color-primary;
+    }
   }
 
   // ── Rounds slider ──────────────────────────────────────────────────────
@@ -197,27 +348,20 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 13px;
-    font-weight: 600;
-    color: $color-text-muted;
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
-    margin-bottom: 6px;
   }
 
   &__rounds-value {
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 800;
+    font-family: $font-heading;
     color: $color-primary;
-    text-transform: none;
-    letter-spacing: 0;
   }
 
   &__slider {
     -webkit-appearance: none;
     appearance: none;
     width: 100%;
-    height: 4px;
+    height: 3px;
     border-radius: 2px;
     background: $color-border;
     outline: none;
@@ -225,12 +369,11 @@
 
     &::-webkit-slider-thumb {
       -webkit-appearance: none;
-      appearance: none;
       width: 18px;
       height: 18px;
       border-radius: 50%;
       background: $color-primary;
-      box-shadow: 0 0 0 3px rgba(79, 195, 247, 0.2);
+      box-shadow: 0 0 0 4px rgba(240, 192, 64, 0.2);
       cursor: pointer;
     }
 
@@ -244,27 +387,56 @@
     }
   }
 
+  // ── Create button ──────────────────────────────────────────────────────
+
+  &__create-btn {
+    position: relative;
+    overflow: hidden;
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.18) 50%, transparent 60%);
+      transform: translateX(-100%);
+      transition: transform 0.5s ease;
+    }
+
+    &:hover:not(:disabled)::after { transform: translateX(100%); }
+  }
+
   // ── Join form ──────────────────────────────────────────────────────────
 
   &__join-form {
     display: flex;
     flex-direction: column;
     gap: 12px;
-    flex: 1;
-    justify-content: center;
   }
 
   &__code-input {
     text-align: center;
-    font-size: 26px;
+    font-size: 30px;
     font-weight: 700;
-    letter-spacing: 10px;
+    font-family: $font-mono;
+    letter-spacing: 14px;
     text-transform: uppercase;
-    padding: 16px;
+    padding: 18px 16px 18px 28px;
+    background: $color-bg;
+    border: 1.5px solid $color-border;
+    border-radius: $border-radius-sm;
+    color: $color-text;
+    transition: border-color $transition, box-shadow $transition;
+
+    &:focus {
+      border-color: $color-primary;
+      box-shadow: 0 0 0 3px rgba(240, 192, 64, 0.15), inset 0 0 20px rgba(240, 192, 64, 0.04);
+    }
+
+    &::placeholder { letter-spacing: 8px; font-size: 22px; }
   }
 
   &__error {
-    margin-top: -16px;
+    margin-top: 4px;
     text-align: center;
   }
 }

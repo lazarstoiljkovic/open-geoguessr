@@ -14,6 +14,7 @@ export interface IRoom extends Document {
   gameMode: GameMode;
   eliminatedPlayerIds: string[];
   messages: ChatMessage[];
+  hintsEnabled: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -95,6 +96,7 @@ const RoomSchema = new Schema<IRoom>(
     gameMode: { type: String, enum: ['standard', 'elimination'], default: 'standard' },
     eliminatedPlayerIds: { type: [String], default: [] },
     messages: { type: [ChatMessageSchema], default: [] },
+    hintsEnabled: { type: Boolean, default: false },
   },
   { timestamps: true },
 );

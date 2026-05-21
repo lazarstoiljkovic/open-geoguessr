@@ -7,7 +7,7 @@ export class RoomRepository {
   async create(data: {
     code: string; hostId: string; player: Player;
     totalRounds: number; roundDurationSeconds: number;
-    locationMode: string; gameMode: string;
+    locationMode: string; gameMode: string; hintsEnabled: boolean;
   }): Promise<IRoom> {
     const room = new RoomModel({
       code: data.code,
@@ -17,6 +17,7 @@ export class RoomRepository {
       roundDurationSeconds: data.roundDurationSeconds,
       locationMode: data.locationMode,
       gameMode: data.gameMode,
+      hintsEnabled: data.hintsEnabled,
     });
     return room.save();
   }

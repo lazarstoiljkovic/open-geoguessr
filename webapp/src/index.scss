@@ -15,29 +15,34 @@ html, body, #root {
 body {
   background-color: $color-bg;
   color: $color-text;
-  font-family: $font-family;
+  font-family: $font-body;
   -webkit-font-smoothing: antialiased;
   line-height: 1.6;
 }
 
-input, textarea, select {
-  font-family: inherit;
+h1, h2, h3, h4, h5, h6 {
+  font-family: $font-heading;
 }
 
-button {
-  font-family: inherit;
-}
+input, textarea, select { font-family: inherit; }
+button { font-family: $font-body; }
+
+// ── Buttons ─────────────────────────────────────────────────────────────────
 
 .btn {
   @include button-base;
+  font-family: $font-heading;
+  letter-spacing: 0.2px;
 
   &--primary {
-    background: $color-primary;
-    color: $color-bg;
+    background: linear-gradient(135deg, #f0c040 0%, #e8a820 100%);
+    color: #0a0b10;
+    box-shadow: 0 2px 12px rgba(240, 192, 64, 0.25);
 
     &:hover:not(:disabled) {
-      background: lighten(#4fc3f7, 10%);
+      background: linear-gradient(135deg, #f5cc55 0%, #f0b830 100%);
       transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(240, 192, 64, 0.4);
     }
   }
 
@@ -47,34 +52,39 @@ button {
     border: 1px solid $color-border;
 
     &:hover:not(:disabled) {
-      background: $color-surface;
+      background: $color-surface-3;
+      border-color: rgba(240, 192, 64, 0.25);
     }
   }
 
   &--danger {
     background: $color-danger;
     color: white;
-
-    &:hover:not(:disabled) {
-      background: darken(#ef5350, 10%);
-    }
+    &:hover:not(:disabled) { background: #e54444; }
   }
 
   &--accent {
-    background: $color-accent;
-    color: $color-bg;
+    background: linear-gradient(135deg, #5aabff 0%, #3d8ef0 100%);
+    color: #fff;
+    box-shadow: 0 2px 12px rgba(90, 171, 255, 0.25);
 
     &:hover:not(:disabled) {
-      background: darken(#f7c948, 10%);
+      background: linear-gradient(135deg, #70b8ff 0%, #5aabff 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(90, 171, 255, 0.4);
     }
   }
 
   &--lg {
     padding: 14px 36px;
     font-size: 16px;
+    font-weight: 700;
     border-radius: $border-radius-sm;
+    letter-spacing: 0.3px;
   }
 }
+
+// ── Inputs ───────────────────────────────────────────────────────────────────
 
 .input {
   width: 100%;
@@ -84,29 +94,29 @@ button {
   border-radius: $border-radius-sm;
   color: $color-text;
   font-size: 14px;
-  transition: border-color $transition;
+  transition: border-color $transition, box-shadow $transition;
   outline: none;
 
   &:focus {
     border-color: $color-primary;
+    box-shadow: 0 0 0 3px rgba(240, 192, 64, 0.15);
   }
 
-  &::placeholder {
-    color: $color-text-muted;
-  }
+  &::placeholder { color: $color-text-muted; }
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 
   label {
-    font-size: 13px;
-    font-weight: 600;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: $font-heading;
     color: $color-text-muted;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.8px;
   }
 }
 
