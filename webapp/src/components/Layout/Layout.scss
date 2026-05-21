@@ -1,0 +1,78 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+.layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    height: 64px;
+    background: $color-surface;
+    border-bottom: 1px solid $color-border;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: $shadow;
+  }
+
+  &__logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: $color-text;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+
+  &__logo-icon {
+    font-size: 24px;
+  }
+
+  &__nav {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  &__nav-link {
+    color: $color-text-muted;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: color $transition;
+
+    &:hover {
+      color: $color-text;
+    }
+  }
+
+  &__user {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  &__username {
+    font-size: 14px;
+    font-weight: 600;
+    color: $color-primary;
+  }
+
+  &__auth {
+    display: flex;
+    gap: 8px;
+  }
+
+  &__main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+}

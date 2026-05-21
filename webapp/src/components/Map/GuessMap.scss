@@ -1,0 +1,26 @@
+@use '../../scss/variables' as *;
+
+.guess-map {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+
+  &__container {
+    flex: 1;
+    border-radius: $border-radius;
+    overflow: hidden;
+    min-height: 300px;
+
+    .leaflet-container {
+      height: 100%;
+      background: $color-bg;
+    }
+  }
+
+  &__actions {
+    padding: 12px 0 0;
+    display: flex;
+    justify-content: center;
+  }
+}

@@ -1,0 +1,60 @@
+@use '../../scss/variables' as *;
+
+.gg-map {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  z-index: 10;
+  width: 300px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  transition: width 0.25s ease, box-shadow 0.25s ease;
+
+  &--expanded {
+    width: max(460px, 30vw);
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.14);
+  }
+
+  &--disabled {
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  &__canvas {
+    width: 100%;
+    height: 200px;
+    transition: height 0.25s ease;
+
+    .gg-map--expanded & {
+      height: max(300px, 28vh);
+    }
+  }
+
+  &__btn {
+    width: 100%;
+    padding: 11px 16px;
+    background: rgba(30, 30, 40, 0.92);
+    border: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.45);
+    font-weight: 700;
+    font-size: 13px;
+    cursor: default;
+    letter-spacing: 0.3px;
+    transition: background 0.12s, color 0.12s;
+    flex-shrink: 0;
+
+    &--ready {
+      background: $color-accent;
+      color: #000;
+      cursor: pointer;
+
+      &:hover {
+        background: lighten(#f7c948, 5%);
+      }
+    }
+  }
+}

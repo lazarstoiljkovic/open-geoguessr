@@ -1,0 +1,104 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+.mapillary-viewer {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: $color-surface-2;
+  border-radius: $border-radius;
+  overflow: hidden;
+
+  // Override mapillary-js default styles to match our dark theme
+  :global(.mapillary-js) {
+    font-family: $font-family;
+  }
+
+  :global(.mapillary-js .mapillary-dom-renderer) {
+    border-radius: $border-radius;
+  }
+
+  // Navigation arrows from mapillary
+  :global(.mapillary-js .mapillary-sequence-direction-prev),
+  :global(.mapillary-js .mapillary-sequence-direction-next) {
+    background: rgba(0, 0, 0, 0.55) !important;
+    border-radius: 50% !important;
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.8) !important;
+    }
+  }
+
+  // ── Loading state ──────────────────────────────────────────────────────
+
+  &__loading {
+    position: absolute;
+    inset: 0;
+    @include flex-center;
+    flex-direction: column;
+    gap: 14px;
+    background: $color-surface-2;
+    z-index: 10;
+    color: $color-text-muted;
+    font-size: 14px;
+  }
+
+  &__spinner {
+    width: 44px;
+    height: 44px;
+    border: 3px solid $color-border;
+    border-top-color: $color-primary;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  // ── Error state ────────────────────────────────────────────────────────
+
+  &__error,
+  &--unavailable {
+    @include flex-center;
+    flex-direction: column;
+    gap: 10px;
+    height: 100%;
+    color: $color-text-muted;
+    text-align: center;
+    padding: 24px;
+
+    span { font-size: 36px; }
+    p    { font-size: 14px; font-weight: 600; }
+    small { font-size: 12px; opacity: 0.7; }
+  }
+
+  // ── Container ─────────────────────────────────────────────────────────
+
+  &__container {
+    width: 100%;
+    height: 100%;
+  }
+
+  // ── Hint overlay ──────────────────────────────────────────────────────
+
+  &__hint {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.55);
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 11px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 20;
+    transition: opacity 0.3s ease;
+
+    &:hover {
+      opacity: 0;
+    }
+  }
+}

@@ -1,0 +1,282 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+.room-page {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 32px 24px;
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+  gap: 32px;
+
+  &--loading {
+    @include flex-center;
+    flex-direction: column;
+    gap: 16px;
+    color: $color-text-muted;
+  }
+
+  &__spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid $color-border;
+    border-top-color: $color-primary;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &__code-block {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__code-label {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: $color-text-muted;
+    letter-spacing: 0.5px;
+  }
+
+  &__code {
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: 8px;
+    color: $color-primary;
+  }
+
+  &__body {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 24px;
+
+    @media (max-width: 700px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &__players {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    h2 {
+      font-size: 16px;
+      font-weight: 700;
+      color: $color-text-muted;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+  }
+
+  &__sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  &__info {
+    @include card;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  &__info-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+
+    span:first-child {
+      color: $color-text-muted;
+    }
+
+    span:last-child {
+      font-weight: 600;
+    }
+  }
+
+  &__settings {
+    @include card;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  &__settings-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__settings-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: $color-text-muted;
+  }
+
+  &__settings-value {
+    font-size: 15px;
+    font-weight: 800;
+    color: $color-primary;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  &__slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 4px;
+    border-radius: 2px;
+    background: $color-border;
+    outline: none;
+    cursor: pointer;
+
+    &::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: $color-primary;
+      box-shadow: 0 0 0 3px rgba(79, 195, 247, 0.2);
+      transition: box-shadow 0.15s;
+      cursor: pointer;
+
+      &:hover {
+        box-shadow: 0 0 0 5px rgba(79, 195, 247, 0.3);
+      }
+    }
+
+    &::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border: none;
+      border-radius: 50%;
+      background: $color-primary;
+      box-shadow: 0 0 0 3px rgba(79, 195, 247, 0.2);
+      cursor: pointer;
+    }
+  }
+
+  &__mode-btns {
+    display: flex;
+    gap: 8px;
+  }
+
+  &__mode-btn {
+    flex: 1;
+    padding: 8px 10px;
+    background: $color-surface-2;
+    border: 2px solid $color-border;
+    border-radius: $border-radius-sm;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    color: $color-text;
+    transition: all $transition;
+    white-space: nowrap;
+
+    &:hover {
+      border-color: rgba(79, 195, 247, 0.4);
+    }
+
+    &--active {
+      border-color: $color-primary;
+      background: rgba(79, 195, 247, 0.08);
+      color: $color-primary;
+    }
+  }
+
+  &__duration-pills {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  &__duration-pill {
+    padding: 5px 14px;
+    background: $color-surface-2;
+    border: 2px solid $color-border;
+    border-radius: 100px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    color: $color-text;
+    transition: all $transition;
+
+    &:hover {
+      border-color: rgba(79, 195, 247, 0.4);
+    }
+
+    &--active {
+      border-color: $color-primary;
+      background: rgba(79, 195, 247, 0.08);
+      color: $color-primary;
+    }
+  }
+
+  &__host-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  &__host-hint {
+    font-size: 13px;
+    color: $color-text-muted;
+    text-align: center;
+  }
+
+  &__waiting {
+    @include flex-center;
+    flex-direction: column;
+    gap: 12px;
+    padding: 24px;
+    color: $color-text-muted;
+    font-size: 14px;
+  }
+
+  &__waiting-dots {
+    display: flex;
+    gap: 6px;
+
+    span {
+      width: 8px;
+      height: 8px;
+      background: $color-primary;
+      border-radius: 50%;
+      animation: pulse 1.4s ease-in-out infinite;
+
+      &:nth-child(2) { animation-delay: 0.2s; }
+      &:nth-child(3) { animation-delay: 0.4s; }
+    }
+  }
+
+  @keyframes pulse {
+    0%, 80%, 100% { transform: scale(0.6); opacity: 0.5; }
+    40% { transform: scale(1); opacity: 1; }
+  }
+}

@@ -1,0 +1,116 @@
+@use './scss/variables' as *;
+@use './scss/mixins' as *;
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  background-color: $color-bg;
+  color: $color-text;
+  font-family: $font-family;
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.6;
+}
+
+input, textarea, select {
+  font-family: inherit;
+}
+
+button {
+  font-family: inherit;
+}
+
+.btn {
+  @include button-base;
+
+  &--primary {
+    background: $color-primary;
+    color: $color-bg;
+
+    &:hover:not(:disabled) {
+      background: lighten(#4fc3f7, 10%);
+      transform: translateY(-1px);
+    }
+  }
+
+  &--secondary {
+    background: $color-surface-2;
+    color: $color-text;
+    border: 1px solid $color-border;
+
+    &:hover:not(:disabled) {
+      background: $color-surface;
+    }
+  }
+
+  &--danger {
+    background: $color-danger;
+    color: white;
+
+    &:hover:not(:disabled) {
+      background: darken(#ef5350, 10%);
+    }
+  }
+
+  &--accent {
+    background: $color-accent;
+    color: $color-bg;
+
+    &:hover:not(:disabled) {
+      background: darken(#f7c948, 10%);
+    }
+  }
+
+  &--lg {
+    padding: 14px 36px;
+    font-size: 16px;
+    border-radius: $border-radius-sm;
+  }
+}
+
+.input {
+  width: 100%;
+  padding: 12px 16px;
+  background: $color-surface-2;
+  border: 1px solid $color-border;
+  border-radius: $border-radius-sm;
+  color: $color-text;
+  font-size: 14px;
+  transition: border-color $transition;
+  outline: none;
+
+  &:focus {
+    border-color: $color-primary;
+  }
+
+  &::placeholder {
+    color: $color-text-muted;
+  }
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  label {
+    font-size: 13px;
+    font-weight: 600;
+    color: $color-text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+}
+
+.error-text {
+  color: $color-danger;
+  font-size: 13px;
+}

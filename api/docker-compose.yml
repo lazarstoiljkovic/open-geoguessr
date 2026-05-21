@@ -1,0 +1,18 @@
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+
+  api:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:4000:4000"   # bind only to localhost — nginx proxies externally
+    env_file: .env.production
+    depends_on:
+      - mongo
+
+volumes:
+  mongo_data:

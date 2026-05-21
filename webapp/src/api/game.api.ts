@@ -1,0 +1,31 @@
+import axios from 'axios';
+import { API_URL } from '../env';
+import { GameMode } from '../types';
+
+const client = axios.create({ baseURL: API_URL });
+
+client.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+
+export async function startGame(roomCode: string, mode: GameMode, duration: number, totalRounds: number): Promise<void> {
+  await client.post('/game/start', { roomCode, mode, duration, totalRounds });
+}
+
+export async function submitGuess(
+  roomCode: string,
+  lat: number,
+  lng: number,
+): Promise<{ distanceKm: number; roundScore: number }> {
+  const { data } = await client.post<{ distanceKm: number; roundScore: number }>(
+    '/game/guess',
+    { roomCode, lat, lng },
+  );
+  return data;
+}
+
+export async function nextRound(roomCode: string): Promise<void> {
+  await client.post('/game/next-round', { roomCode });
+}
