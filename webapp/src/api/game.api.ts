@@ -1,6 +1,5 @@
 import axios from 'axios';
 import { API_URL } from '../env';
-import { GameMode } from '../types';
 
 const client = axios.create({ baseURL: API_URL });
 
@@ -10,8 +9,8 @@ client.interceptors.request.use((config) => {
   return config;
 });
 
-export async function startGame(roomCode: string, mode: GameMode, duration: number, totalRounds: number): Promise<void> {
-  await client.post('/game/start', { roomCode, mode, duration, totalRounds });
+export async function startGame(roomCode: string): Promise<void> {
+  await client.post('/game/start', { roomCode });
 }
 
 export async function submitGuess(

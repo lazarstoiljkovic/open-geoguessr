@@ -40,6 +40,20 @@ export interface Round {
 }
 
 export type GameStatus = 'waiting' | 'countdown' | 'playing' | 'round_results' | 'round_countdown' | 'game_over';
+export type GameMode = 'standard' | 'elimination';
+export type LocationMode = 'famous' | 'world';
+
+export interface EliminationRoundResult {
+  eliminatedUserIds: string[];
+  isTieBreaker: boolean;
+}
+
+export interface LivePin {
+  userId: string;
+  username: string;
+  lat: number;
+  lng: number;
+}
 
 export interface Room {
   id: string;
@@ -50,6 +64,9 @@ export interface Room {
   totalRounds: number;
   currentRoundIndex: number;
   roundDurationSeconds: number;
+  locationMode: LocationMode;
+  gameMode: GameMode;
+  eliminatedPlayerIds: string[];
 }
 
 export interface LeaderboardEntry {
@@ -58,5 +75,3 @@ export interface LeaderboardEntry {
   totalScore: number;
   gamesPlayed: number;
 }
-
-export type GameMode = 'famous' | 'world';

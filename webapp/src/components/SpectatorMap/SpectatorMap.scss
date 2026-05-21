@@ -1,0 +1,68 @@
+@use '../../scss/variables' as *;
+
+.spectator-map {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+
+  &__player-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 10px 14px;
+    background: rgba(13, 15, 22, 0.85);
+    border-bottom: 1px solid $color-border;
+    flex-shrink: 0;
+  }
+
+  &__pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: $color-surface-2;
+    color: $color-text-muted;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+
+    &:hover {
+      border-color: var(--player-color);
+      color: $color-text;
+    }
+
+    &--active {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: var(--player-color);
+      color: $color-text;
+    }
+  }
+
+  &__pill-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--player-color);
+    flex-shrink: 0;
+  }
+
+  &__pill-waiting {
+    font-size: 11px;
+    color: $color-text-muted;
+    animation: pulse 1.2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+  }
+
+  &__canvas {
+    flex: 1;
+    min-height: 0;
+  }
+}

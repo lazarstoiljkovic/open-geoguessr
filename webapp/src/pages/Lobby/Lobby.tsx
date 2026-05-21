@@ -2,7 +2,7 @@ import React, { FormEvent, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createRoom, joinRoom } from '../../api/rooms.api';
 import { useAuth } from '../../context/AuthContext';
-import { GameMode } from '../../types';
+import { GameMode, LocationMode } from '../../types';
 import './Lobby.scss';
 
 const DURATIONS = [
@@ -17,8 +17,10 @@ export default function Lobby() {
   const navigate = useNavigate();
 
   const [joinCode, setJoinCode] = useState('');
-  const [mode, setMode] = useState<GameMode>('famous');
+  const [locationMode, setLocationMode] = useState<LocationMode>('famous');
+  const [gameMode, setGameMode] = useState<GameMode>('standard');
   const [duration, setDuration] = useState(60);
+  const [rounds, setRounds] = useState(5);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -30,8 +32,8 @@ export default function Lobby() {
     setError('');
     setLoading(true);
     try {
-      const created = await createRoom(mode);
-      navigate(`/room/${created.code}`, { state: { mode, duration } });
+      const created = await createRoom(locationMode, gameMode, rounds, duration);
+      navigate(`/room/${created.code}`);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to create room');
     } finally {
@@ -71,18 +73,39 @@ export default function Lobby() {
 
           <div className="form-group">
             <label>Game Mode</label>
+            <div className="lobby-page__toggle-row">
+              <button
+                className={`lobby-page__toggle-btn ${gameMode === 'standard' ? 'lobby-page__toggle-btn--active' : ''}`}
+                onClick={() => setGameMode('standard')}
+              >
+                🎯 Standard
+              </button>
+              <button
+                className={`lobby-page__toggle-btn ${gameMode === 'elimination' ? 'lobby-page__toggle-btn--active' : ''}`}
+                onClick={() => setGameMode('elimination')}
+              >
+                ⚔️ Elimination
+              </button>
+            </div>
+            {gameMode === 'elimination' && (
+              <p className="lobby-page__hint">Worst guesser each round is eliminated. Last one standing wins.</p>
+            )}
+          </div>
+
+          <div className="form-group">
+            <label>Locations</label>
             <div className="lobby-page__modes">
               <button
-                className={`lobby-page__mode-btn ${mode === 'famous' ? 'lobby-page__mode-btn--active' : ''}`}
-                onClick={() => setMode('famous')}
+                className={`lobby-page__mode-btn ${locationMode === 'famous' ? 'lobby-page__mode-btn--active' : ''}`}
+                onClick={() => setLocationMode('famous')}
               >
-                <span className="lobby-page__mode-icon">🎯</span>
+                <span className="lobby-page__mode-icon">🌍</span>
                 <span className="lobby-page__mode-name">Famous Landmarks</span>
                 <span className="lobby-page__mode-desc">Iconic locations from around the world</span>
               </button>
               <button
-                className={`lobby-page__mode-btn ${mode === 'world' ? 'lobby-page__mode-btn--active' : ''}`}
-                onClick={() => setMode('world')}
+                className={`lobby-page__mode-btn ${locationMode === 'world' ? 'lobby-page__mode-btn--active' : ''}`}
+                onClick={() => setLocationMode('world')}
               >
                 <span className="lobby-page__mode-icon">🌏</span>
                 <span className="lobby-page__mode-name">Random World</span>
@@ -105,6 +128,23 @@ export default function Lobby() {
               ))}
             </div>
           </div>
+
+          {gameMode === 'standard' && (
+            <div className="form-group">
+              <label>
+                Number of Rounds
+                <span className="lobby-page__rounds-value">{rounds}</span>
+              </label>
+              <input
+                className="lobby-page__slider"
+                type="range"
+                min={1}
+                max={20}
+                value={rounds}
+                onChange={(e) => setRounds(Number(e.target.value))}
+              />
+            </div>
+          )}
 
           <button
             className="btn btn--primary btn--lg"

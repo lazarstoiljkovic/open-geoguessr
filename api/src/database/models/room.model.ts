@@ -1,5 +1,5 @@
 import mongoose, { Document, Schema } from 'mongoose';
-import { GameStatus, Player, Round } from 'src/types';
+import { ChatMessage, GameMode, GameStatus, Player, Round } from 'src/types';
 
 export interface IRoom extends Document {
   code: string;
@@ -11,6 +11,9 @@ export interface IRoom extends Document {
   totalRounds: number;
   roundDurationSeconds: number;
   locationMode: 'famous' | 'world';
+  gameMode: GameMode;
+  eliminatedPlayerIds: string[];
+  messages: ChatMessage[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -53,6 +56,16 @@ const RoundSchema = new Schema(
   { _id: false },
 );
 
+const ChatMessageSchema = new Schema(
+  {
+    userId: String,
+    username: String,
+    text: String,
+    timestamp: Number,
+  },
+  { _id: false },
+);
+
 const PlayerSchema = new Schema(
   {
     userId: String,
@@ -79,6 +92,9 @@ const RoomSchema = new Schema<IRoom>(
     totalRounds: { type: Number, default: 5 },
     roundDurationSeconds: { type: Number, default: 60 },
     locationMode: { type: String, enum: ['famous', 'world'], default: 'famous' },
+    gameMode: { type: String, enum: ['standard', 'elimination'], default: 'standard' },
+    eliminatedPlayerIds: { type: [String], default: [] },
+    messages: { type: [ChatMessageSchema], default: [] },
   },
   { timestamps: true },
 );

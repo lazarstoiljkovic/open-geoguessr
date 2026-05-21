@@ -2,14 +2,20 @@ import { Service } from 'typedi';
 import { RoomRepository } from 'src/database/repositories/room.repository';
 import { generateRoomCode } from 'src/utils/geo.utils';
 import { Player } from 'src/types';
-import { GameFactory, GameMode } from 'src/patterns/factory/game.factory';
+import { LocationMode, GameMode } from 'src/patterns/factory/game.factory';
 
 @Service()
 export class RoomService {
   constructor(private readonly roomRepository: RoomRepository) {}
 
-  async createRoom(hostId: string, username: string, mode: GameMode = 'famous') {
-    const config = GameFactory.create(mode);
+  async createRoom(
+    hostId: string,
+    username: string,
+    locationMode: LocationMode = 'famous',
+    gameMode: GameMode = 'standard',
+    totalRounds = 5,
+    roundDurationSeconds = 60,
+  ) {
     const code = generateRoomCode();
 
     const player: Player = {
@@ -20,12 +26,16 @@ export class RoomService {
       connected: true,
     };
 
+    const actualTotalRounds = gameMode === 'elimination' ? 99 : totalRounds;
+
     const room = await this.roomRepository.create({
       code,
       hostId,
       player,
-      totalRounds: config.totalRounds,
-      roundDurationSeconds: config.roundDurationSeconds,
+      totalRounds: actualTotalRounds,
+      roundDurationSeconds,
+      locationMode,
+      gameMode,
     });
 
     return room;

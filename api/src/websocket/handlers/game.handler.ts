@@ -16,6 +16,10 @@ export class GameHandler {
         return this.onJoinRoom(client, data as { roomCode: string });
       case 'leave_room':
         return this.onLeaveRoom(client);
+      case 'send_message':
+        return this.onSendMessage(client, data as { text: string });
+      case 'pin_move':
+        return this.onPinMove(client, data as { lat: number; lng: number });
       default:
         client.send(JSON.stringify({ event: 'error', data: { message: `Unknown event: ${event}` } }));
     }
@@ -63,22 +67,74 @@ export class GameHandler {
     const updatedRoom = await this.roomRepository.findByCode(data.roomCode);
     broadcastToRoom(data.roomCode, 'room_updated', this.serializeRoom(updatedRoom!));
     client.send(JSON.stringify({ event: 'joined_room', data: this.serializeRoom(updatedRoom!) }));
+    client.send(JSON.stringify({ event: 'chat_history', data: { messages: updatedRoom!.messages ?? [] } }));
 
-    // Catch-up: if game is in progress, resend the current round
-    if (updatedRoom!.status === 'playing') {
-      const round = updatedRoom!.rounds[updatedRoom!.currentRoundIndex];
+    // Catch-up: resend state-restoring event based on current room status
+    const catchUpRoom = updatedRoom!;
+    if (catchUpRoom.status === 'playing') {
+      const round = catchUpRoom.rounds[catchUpRoom.currentRoundIndex];
       if (round?.location) {
         client.send(JSON.stringify({
           event: 'round_started',
           data: {
             round: this.gameService.serializeRoundForClient(round as RoundWithLocation),
-            roundIndex: updatedRoom!.currentRoundIndex,
-            totalRounds: updatedRoom!.totalRounds,
-            durationSeconds: updatedRoom!.roundDurationSeconds,
+            roundIndex: catchUpRoom.currentRoundIndex,
+            totalRounds: catchUpRoom.totalRounds,
+            durationSeconds: catchUpRoom.roundDurationSeconds,
+            gameMode: catchUpRoom.gameMode,
+            eliminatedPlayerIds: catchUpRoom.eliminatedPlayerIds ?? [],
           },
         }));
       }
+    } else if (catchUpRoom.status === 'round_results') {
+      const round = catchUpRoom.rounds[catchUpRoom.currentRoundIndex];
+      if (round) {
+        client.send(JSON.stringify({
+          event: 'round_ended',
+          data: {
+            round,
+            players: catchUpRoom.players,
+            isLastRound: catchUpRoom.currentRoundIndex >= catchUpRoom.totalRounds - 1,
+            eliminatedPlayerIds: catchUpRoom.eliminatedPlayerIds ?? [],
+          },
+        }));
+      }
+    } else if (catchUpRoom.status === 'game_over') {
+      client.send(JSON.stringify({
+        event: 'game_over',
+        data: {
+          players: [...catchUpRoom.players].sort((a, b) => b.score - a.score),
+        },
+      }));
     }
+  }
+
+  private async onSendMessage(client: AuthenticatedClient, data: { text: string }): Promise<void> {
+    if (!client.roomCode) return;
+    const text = String(data.text ?? '').trim().slice(0, 300);
+    if (!text) return;
+
+    const message = { userId: client.userId, username: client.username, text, timestamp: Date.now() };
+
+    const room = await this.roomRepository.findByCode(client.roomCode);
+    if (room) await this.roomRepository.addMessage(room._id.toString(), message);
+
+    broadcastToRoom(client.roomCode, 'new_message', message);
+  }
+
+  // Broadcast active player's pin position to all spectators in the room
+  private onPinMove(client: AuthenticatedClient, data: { lat: number; lng: number }): void {
+    if (!client.roomCode) return;
+    const lat = Number(data.lat);
+    const lng = Number(data.lng);
+    if (!isFinite(lat) || !isFinite(lng)) return;
+
+    broadcastToRoom(client.roomCode, 'spectator_pin_move', {
+      userId: client.userId,
+      username: client.username,
+      lat,
+      lng,
+    });
   }
 
   private async onLeaveRoom(client: AuthenticatedClient): Promise<void> {
@@ -87,7 +143,11 @@ export class GameHandler {
     client.roomCode = undefined;
   }
 
-  private serializeRoom(room: { _id: unknown; code: string; status: string; hostId: string; players: unknown; totalRounds: number; currentRoundIndex: number; roundDurationSeconds: number }) {
+  private serializeRoom(room: {
+    _id: unknown; code: string; status: string; hostId: string;
+    players: unknown; totalRounds: number; currentRoundIndex: number;
+    roundDurationSeconds: number; locationMode?: string; gameMode?: string; eliminatedPlayerIds?: string[];
+  }) {
     return {
       id: room._id,
       code: room.code,
@@ -97,6 +157,9 @@ export class GameHandler {
       totalRounds: room.totalRounds,
       currentRoundIndex: room.currentRoundIndex,
       roundDurationSeconds: room.roundDurationSeconds,
+      locationMode: room.locationMode ?? 'famous',
+      gameMode: room.gameMode ?? 'standard',
+      eliminatedPlayerIds: room.eliminatedPlayerIds ?? [],
     };
   }
 }

@@ -5,13 +5,16 @@ import './GoogleGuessMap.scss';
 
 interface Props {
   onGuess?: (lat: number, lng: number) => void;
+  onPinMove?: (lat: number, lng: number) => void;
   disabled?: boolean;
 }
 
-export default function GoogleGuessMap({ onGuess, disabled = false }: Props) {
+export default function GoogleGuessMap({ onGuess, onPinMove, disabled = false }: Props) {
   const mapDivRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const markerRef = useRef<google.maps.Marker | null>(null);
+  const onPinMoveRef = useRef(onPinMove);
+  useEffect(() => { onPinMoveRef.current = onPinMove; }, [onPinMove]);
   const [pin, setPin] = useState<{ lat: number; lng: number } | null>(null);
   const [expanded, setExpanded] = useState(false);
 
@@ -51,6 +54,8 @@ export default function GoogleGuessMap({ onGuess, disabled = false }: Props) {
               animation: google.maps.Animation.DROP,
             });
           }
+
+          onPinMoveRef.current?.(lat, lng);
         });
       }
     });

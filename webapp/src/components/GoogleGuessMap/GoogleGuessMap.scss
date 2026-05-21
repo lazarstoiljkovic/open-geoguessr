@@ -14,7 +14,7 @@
   transition: width 0.25s ease, box-shadow 0.25s ease;
 
   &--expanded {
-    width: max(460px, 30vw);
+    width: max(320px, 33vw);
     box-shadow: 0 12px 48px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.14);
   }
 
@@ -29,7 +29,7 @@
     transition: height 0.25s ease;
 
     .gg-map--expanded & {
-      height: max(300px, 28vh);
+      height: max(300px, calc(33vw * 0.7));
     }
   }
 

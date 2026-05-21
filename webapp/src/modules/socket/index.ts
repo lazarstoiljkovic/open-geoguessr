@@ -8,6 +8,7 @@ class SocketClient {
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private token: string | null = null;
   private everConnected = false;
+  private pendingMessages: string[] = [];
 
   connect(token: string): void {
     if (this.ws && this.ws.readyState !== WebSocket.CLOSED) {
@@ -22,6 +23,10 @@ class SocketClient {
     this.ws = new WebSocket(`${WS_URL}?token=${token}`);
 
     this.ws.onopen = () => {
+      // Flush any messages queued before the socket was ready
+      const pending = this.pendingMessages.splice(0);
+      pending.forEach((msg) => this.ws!.send(msg));
+
       if (this.everConnected) {
         this.emit('_reconnected', {});
       }
@@ -46,6 +51,7 @@ class SocketClient {
 
   disconnect(): void {
     this.token = null;
+    this.pendingMessages = [];
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
@@ -56,8 +62,12 @@ class SocketClient {
   }
 
   send(event: string, data: unknown): void {
+    const msg = JSON.stringify({ event, data });
     if (this.ws?.readyState === WebSocket.OPEN) {
-      this.ws.send(JSON.stringify({ event, data }));
+      this.ws.send(msg);
+    } else {
+      // Queue until socket is ready (handles page refresh race condition)
+      this.pendingMessages.push(msg);
     }
   }
 

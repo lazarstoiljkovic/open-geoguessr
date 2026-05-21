@@ -2,17 +2,15 @@ import Router from 'koa-router';
 import { Container } from 'typedi';
 import { authMiddleware } from 'src/middlewares/auth.middleware';
 import { GameService } from 'src/services/game.service';
-import { GameMode } from 'src/patterns/factory/game.factory';
-
 const router = new Router({ prefix: '/game' });
 const gameService = () => Container.get(GameService);
 
 router.post('/start', authMiddleware, async (ctx) => {
-  const { roomCode, mode, duration, totalRounds } = ctx.request.body as { roomCode: string; mode?: GameMode; duration?: number; totalRounds?: number };
+  const { roomCode } = ctx.request.body as { roomCode: string };
   if (!roomCode) { ctx.status = 400; ctx.body = { message: 'roomCode is required' }; return; }
 
   try {
-    await gameService().startGame(ctx.state.userId, roomCode, mode, duration, totalRounds);
+    await gameService().startGame(ctx.state.userId, roomCode);
     ctx.status = 200;
     ctx.body = { ok: true };
   } catch (err: unknown) {

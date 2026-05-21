@@ -1,16 +1,22 @@
 import { Service } from 'typedi';
 import { IRoom, RoomModel } from '../models/room.model';
-import { GameStatus, Location, Player, Round } from 'src/types';
+import { ChatMessage, GameStatus, Location, Player, Round } from 'src/types';
 
 @Service()
 export class RoomRepository {
-  async create(data: { code: string; hostId: string; player: Player; totalRounds: number; roundDurationSeconds: number }): Promise<IRoom> {
+  async create(data: {
+    code: string; hostId: string; player: Player;
+    totalRounds: number; roundDurationSeconds: number;
+    locationMode: string; gameMode: string;
+  }): Promise<IRoom> {
     const room = new RoomModel({
       code: data.code,
       hostId: data.hostId,
       players: [data.player],
       totalRounds: data.totalRounds,
       roundDurationSeconds: data.roundDurationSeconds,
+      locationMode: data.locationMode,
+      gameMode: data.gameMode,
     });
     return room.save();
   }
@@ -49,10 +55,11 @@ export class RoomRepository {
     rounds: Pick<Round, 'index' | 'guesses' | 'startedAt'>[],
     locationMode: string,
     roundDurationSeconds: number,
+    gameMode = 'standard',
   ): Promise<IRoom | null> {
     return RoomModel.findByIdAndUpdate(
       roomId,
-      { $set: { rounds, locationMode, roundDurationSeconds } },
+      { $set: { rounds, locationMode, roundDurationSeconds, gameMode, eliminatedPlayerIds: [] } },
       { new: true },
     ).exec();
   }
@@ -100,6 +107,20 @@ export class RoomRepository {
       roomId,
       { $set: { 'rounds.$[elem].endedAt': endedAt } },
       { arrayFilters: [{ 'elem.index': roundIndex }] },
+    ).exec();
+  }
+
+  async addEliminatedPlayer(roomId: string, userId: string): Promise<void> {
+    await RoomModel.findByIdAndUpdate(
+      roomId,
+      { $addToSet: { eliminatedPlayerIds: userId } },
+    ).exec();
+  }
+
+  async addMessage(roomId: string, message: ChatMessage): Promise<void> {
+    await RoomModel.findByIdAndUpdate(
+      roomId,
+      { $push: { messages: { $each: [message], $slice: -200 } } },
     ).exec();
   }
 

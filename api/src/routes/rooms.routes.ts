@@ -2,14 +2,22 @@ import Router from 'koa-router';
 import { Container } from 'typedi';
 import { RoomService } from 'src/services/room.service';
 import { authMiddleware } from 'src/middlewares/auth.middleware';
-import { GameMode } from 'src/patterns/factory/game.factory';
+import { LocationMode, GameMode } from 'src/patterns/factory/game.factory';
 
 const router = new Router({ prefix: '/rooms' });
 const roomService = () => Container.get(RoomService);
 
 router.post('/create', authMiddleware, async (ctx) => {
-  const { mode } = ctx.request.body as { mode?: GameMode };
-  const room = await roomService().createRoom(ctx.state.userId, ctx.state.username, mode);
+  const { locationMode, gameMode, totalRounds, roundDurationSeconds } = ctx.request.body as {
+    locationMode?: LocationMode;
+    gameMode?: GameMode;
+    totalRounds?: number;
+    roundDurationSeconds?: number;
+  };
+  const room = await roomService().createRoom(
+    ctx.state.userId, ctx.state.username,
+    locationMode, gameMode, totalRounds, roundDurationSeconds,
+  );
   ctx.status = 201;
   ctx.body = { room: { id: room._id, code: room.code, status: room.status, players: room.players, totalRounds: room.totalRounds } };
 });

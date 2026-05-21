@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { API_URL } from '../env';
-import { Room, GameMode } from '../types';
+import { Room, LocationMode, GameMode } from '../types';
 
 const client = axios.create({ baseURL: API_URL });
 
@@ -10,8 +10,13 @@ client.interceptors.request.use((config) => {
   return config;
 });
 
-export async function createRoom(mode: GameMode = 'famous'): Promise<Room> {
-  const { data } = await client.post<{ room: Room }>('/rooms/create', { mode });
+export async function createRoom(
+  locationMode: LocationMode = 'famous',
+  gameMode: GameMode = 'standard',
+  totalRounds = 5,
+  roundDurationSeconds = 60,
+): Promise<Room> {
+  const { data } = await client.post<{ room: Room }>('/rooms/create', { locationMode, gameMode, totalRounds, roundDurationSeconds });
   return data.room;
 }
 
