@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { loadGoogleMapsApi } from '../../lib/googleMaps';
 import { GOOGLE_MAPS_KEY } from '../../env';
 import { LivePin, Player } from '../../types';
