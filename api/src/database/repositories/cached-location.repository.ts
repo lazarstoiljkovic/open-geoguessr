@@ -1,27 +1,22 @@
 import { Service } from 'typedi';
 import { CachedLocationModel, ICachedLocation } from '../models/cached-location.model';
+import { BaseRepository } from './base.repository';
 
 @Service()
-export class CachedLocationRepository {
-  async save(data: { lat: number; lng: number; panoId: string; name: string; country: string }): Promise<ICachedLocation> {
-    return new CachedLocationModel(data).save();
+export class CachedLocationRepository extends BaseRepository<ICachedLocation> {
+  constructor() {
+    super(CachedLocationModel);
   }
 
-  async countAll(): Promise<number> {
-    return CachedLocationModel.countDocuments().exec();
-  }
-
-  // Returns a uniformly random document. When cache is large this is fast enough.
-  // Falls back to null when collection is empty.
   async pickRandom(): Promise<ICachedLocation | null> {
-    const [doc] = await CachedLocationModel.aggregate<ICachedLocation>([{ $sample: { size: 1 } }]);
+    const [doc] = await this.model.aggregate<ICachedLocation>([{ $sample: { size: 1 } }]);
     return doc ?? null;
   }
 
   async markUsed(id: string): Promise<void> {
-    await CachedLocationModel.findByIdAndUpdate(id, {
+    await this.updateById(id, {
       $inc: { usedCount: 1 },
       $set: { lastUsedAt: new Date() },
-    }).exec();
+    });
   }
 }

@@ -44,7 +44,8 @@ export default function Game() {
   const {
     room, status, currentRound, roundIndex, totalRounds, durationSeconds,
     countdownSeconds, roundCountdown, myGuess, myGuessResult, roundResults, finalResults,
-    allRoundResults, messages, sendMessage, eliminatedPlayerIds, livePlayerPins, broadcastPinMove,
+    allRoundResults, messages, teamMessages, sendMessage, sendTeamMessage,
+    eliminatedPlayerIds, livePlayerPins, broadcastPinMove,
     joinRoom, submitGuess, nextRound, leaveRoom,
     isSubmittingGuess, isAdvancingRound,
     requestHint, hintResults, usedHints,
@@ -55,6 +56,11 @@ export default function Game() {
   const [chatOpen, setChatOpen] = useState(false);
 
   const isEliminated = eliminatedPlayerIds.includes(user?.id ?? '');
+  const teamsEnabled = room?.teamsEnabled ?? false;
+  const myTeamId = room?.players.find((p) => p.userId === user?.id)?.teamId;
+
+  const teamScore = (teamId: number) =>
+    (room?.players ?? []).filter((p) => p.teamId === teamId).reduce((s, p) => s + p.score, 0);
 
   const timeLeft = useCountdown(durationSeconds, status === 'playing' && !myGuess, currentRound?.startedAt);
 
@@ -119,6 +125,10 @@ export default function Game() {
     const sorted = [...finalResults.players].sort((a, b) => b.score - a.score);
     const podium = sorted.slice(0, 3);
 
+    const t1Score = teamScore(1);
+    const t2Score = teamScore(2);
+    const winningTeam = teamsEnabled ? (t1Score > t2Score ? 1 : t2Score > t1Score ? 2 : 0) : null;
+
     // Podium order: 2nd | 1st | 3rd
     const podiumOrder = [podium[1], podium[0], podium[2]].filter(Boolean);
     const podiumRanks = [2, 1, 3];
@@ -128,6 +138,21 @@ export default function Game() {
       <div className="game-page game-page--results">
         <div className="game-page__final-card">
           <h1 className="game-page__final-title">🏆 Game Over!</h1>
+
+          {teamsEnabled && (
+            <div className="game-page__team-result">
+              {winningTeam === 0 ? (
+                <span className="game-page__team-result-text">🤝 It's a tie!</span>
+              ) : (
+                <span className="game-page__team-result-text">
+                  👥 Team {winningTeam} wins!
+                  <span className="game-page__team-scores">
+                    {t1Score.toLocaleString()} vs {t2Score.toLocaleString()}
+                  </span>
+                </span>
+              )}
+            </div>
+          )}
 
           {/* Podium */}
           <div className="game-page__podium">
@@ -295,7 +320,7 @@ export default function Game() {
               </div>
             )}
 
-            <Scoreboard players={players} currentUserId={user?.id} />
+            <Scoreboard players={players} currentUserId={user?.id} teamsEnabled={teamsEnabled} />
             {isHost ? (
               <button
                 className="btn btn--primary btn--lg"
@@ -308,7 +333,14 @@ export default function Game() {
               <p className="game-page__waiting-host">Waiting for host to continue...</p>
             )}
             <div className="game-page__results-chat">
-              <Chat messages={messages} currentUserId={user?.id} onSend={sendMessage} />
+              <Chat
+                messages={messages}
+                teamMessages={teamMessages}
+                currentUserId={user?.id}
+                teamsEnabled={teamsEnabled}
+                onSend={sendMessage}
+                onSendTeam={sendTeamMessage}
+              />
             </div>
           </div>
         </div>
@@ -350,6 +382,17 @@ export default function Game() {
                   {useMapillary && <span className="game-page__mapillary-badge">🌐 Mapillary</span>}
                 </>
               )}
+              {teamsEnabled && (
+                <div className="game-page__team-hud">
+                  <span className={`game-page__team-pill${myTeamId === 1 ? ' game-page__team-pill--mine' : ''}`}>
+                    T1 {teamScore(1).toLocaleString()}
+                  </span>
+                  <span className="game-page__team-vs">vs</span>
+                  <span className={`game-page__team-pill${myTeamId === 2 ? ' game-page__team-pill--mine' : ''}`}>
+                    T2 {teamScore(2).toLocaleString()}
+                  </span>
+                </div>
+              )}
             </div>
             <div className="game-page__timer-wrap">
               <Timer seconds={myGuess ? 0 : timeLeft} total={durationSeconds} />
@@ -375,7 +418,14 @@ export default function Game() {
                       <span>💬 Chat</span>
                       <span className="game-page__chat-chevron">▼</span>
                     </button>
-                    <Chat messages={messages} currentUserId={user?.id} onSend={sendMessage} />
+                    <Chat
+                      messages={messages}
+                      teamMessages={teamMessages}
+                      currentUserId={user?.id}
+                      teamsEnabled={teamsEnabled}
+                      onSend={sendMessage}
+                      onSendTeam={sendTeamMessage}
+                    />
                   </div>
                 ) : (
                   <button className="game-page__chat-pill" onClick={() => setChatOpen(true)}>
@@ -448,7 +498,14 @@ export default function Game() {
                       <span>💬 Chat</span>
                       <span className="game-page__chat-chevron">▼</span>
                     </button>
-                    <Chat messages={messages} currentUserId={user?.id} onSend={sendMessage} />
+                    <Chat
+                      messages={messages}
+                      teamMessages={teamMessages}
+                      currentUserId={user?.id}
+                      teamsEnabled={teamsEnabled}
+                      onSend={sendMessage}
+                      onSendTeam={sendTeamMessage}
+                    />
                   </div>
                 ) : (
                   <button className="game-page__chat-pill" onClick={() => setChatOpen(true)}>

@@ -1,15 +1,29 @@
 import { Service } from 'typedi';
 import { IRoom, RoomModel } from '../models/room.model';
 import { ChatMessage, GameStatus, Location, Player, Round } from 'src/types';
+import { LocationMode, GameMode } from 'src/patterns/factory/game.factory';
+import { BaseRepository } from './base.repository';
 
 @Service()
-export class RoomRepository {
-  async create(data: {
-    code: string; hostId: string; player: Player;
-    totalRounds: number; roundDurationSeconds: number;
-    locationMode: string; gameMode: string; hintsEnabled: boolean;
+export class RoomRepository extends BaseRepository<IRoom> {
+  constructor() {
+    super(RoomModel);
+  }
+
+  async createRoom(data: {
+    code: string;
+    hostId: string;
+    player: Player;
+    totalRounds: number;
+    roundDurationSeconds: number;
+    locationMode: LocationMode;
+    gameMode: GameMode;
+    hintsEnabled: boolean;
+    spectatorsAllowed: boolean;
+    teamsEnabled: boolean;
+    teamSize: number;
   }): Promise<IRoom> {
-    const room = new RoomModel({
+    return this.create({
       code: data.code,
       hostId: data.hostId,
       players: [data.player],
@@ -18,20 +32,18 @@ export class RoomRepository {
       locationMode: data.locationMode,
       gameMode: data.gameMode,
       hintsEnabled: data.hintsEnabled,
+      spectatorsAllowed: data.spectatorsAllowed,
+      teamsEnabled: data.teamsEnabled,
+      teamSize: data.teamSize,
     });
-    return room.save();
   }
 
   async findByCode(code: string): Promise<IRoom | null> {
-    return RoomModel.findOne({ code: code.toUpperCase() }).exec();
-  }
-
-  async findById(id: string): Promise<IRoom | null> {
-    return RoomModel.findById(id).exec();
+    return this.findOne({ code: code.toUpperCase() });
   }
 
   async addPlayer(roomId: string, player: Player): Promise<IRoom | null> {
-    return RoomModel.findByIdAndUpdate(
+    return this.model.findByIdAndUpdate(
       roomId,
       { $push: { players: player } },
       { new: true },
@@ -39,7 +51,7 @@ export class RoomRepository {
   }
 
   async updatePlayerConnection(roomId: string, userId: string, connected: boolean): Promise<void> {
-    await RoomModel.findByIdAndUpdate(
+    await this.model.findByIdAndUpdate(
       roomId,
       { $set: { 'players.$[elem].connected': connected } },
       { arrayFilters: [{ 'elem.userId': userId }] },
@@ -47,10 +59,9 @@ export class RoomRepository {
   }
 
   async setStatus(roomId: string, status: GameStatus): Promise<IRoom | null> {
-    return RoomModel.findByIdAndUpdate(roomId, { $set: { status } }, { new: true }).exec();
+    return this.updateById(roomId, { $set: { status } });
   }
 
-  // Initializes game: stores empty round placeholders, mode, and duration all at once
   async initGame(
     roomId: string,
     rounds: Pick<Round, 'index' | 'guesses' | 'startedAt'>[],
@@ -58,15 +69,13 @@ export class RoomRepository {
     roundDurationSeconds: number,
     gameMode = 'standard',
   ): Promise<IRoom | null> {
-    return RoomModel.findByIdAndUpdate(
-      roomId,
-      { $set: { rounds, locationMode, roundDurationSeconds, gameMode, eliminatedPlayerIds: [] } },
-      { new: true },
-    ).exec();
+    return this.updateById(roomId, {
+      $set: { rounds, locationMode, roundDurationSeconds, gameMode, eliminatedPlayerIds: [] },
+    });
   }
 
   async setRoundLocation(roomId: string, roundIndex: number, location: Location): Promise<void> {
-    await RoomModel.findByIdAndUpdate(
+    await this.model.findByIdAndUpdate(
       roomId,
       { $set: { 'rounds.$[elem].location': location } },
       { arrayFilters: [{ 'elem.index': roundIndex }] },
@@ -74,7 +83,7 @@ export class RoomRepository {
   }
 
   async updateCurrentRound(roomId: string, roundIndex: number, startedAt: number, status: GameStatus): Promise<IRoom | null> {
-    return RoomModel.findByIdAndUpdate(
+    return this.model.findByIdAndUpdate(
       roomId,
       {
         $set: {
@@ -88,7 +97,7 @@ export class RoomRepository {
   }
 
   async updatePlayerScore(roomId: string, userId: string, score: number): Promise<void> {
-    await RoomModel.findByIdAndUpdate(
+    await this.model.findByIdAndUpdate(
       roomId,
       { $set: { 'players.$[elem].score': score } },
       { arrayFilters: [{ 'elem.userId': userId }] },
@@ -96,7 +105,7 @@ export class RoomRepository {
   }
 
   async addGuessToRound(roomId: string, roundIndex: number, guess: Round['guesses'][0]): Promise<IRoom | null> {
-    return RoomModel.findByIdAndUpdate(
+    return this.model.findByIdAndUpdate(
       roomId,
       { $push: { 'rounds.$[elem].guesses': guess } },
       { arrayFilters: [{ 'elem.index': roundIndex }], new: true },
@@ -104,7 +113,7 @@ export class RoomRepository {
   }
 
   async setRoundEndTime(roomId: string, roundIndex: number, endedAt: number): Promise<void> {
-    await RoomModel.findByIdAndUpdate(
+    await this.model.findByIdAndUpdate(
       roomId,
       { $set: { 'rounds.$[elem].endedAt': endedAt } },
       { arrayFilters: [{ 'elem.index': roundIndex }] },
@@ -112,14 +121,22 @@ export class RoomRepository {
   }
 
   async addEliminatedPlayer(roomId: string, userId: string): Promise<void> {
-    await RoomModel.findByIdAndUpdate(
+    await this.model.findByIdAndUpdate(
       roomId,
       { $addToSet: { eliminatedPlayerIds: userId } },
     ).exec();
   }
 
+  async updatePlayerTeam(roomId: string, userId: string, teamId: number): Promise<IRoom | null> {
+    return this.model.findByIdAndUpdate(
+      roomId,
+      { $set: { 'players.$[elem].teamId': teamId } },
+      { arrayFilters: [{ 'elem.userId': userId }], new: true },
+    ).exec();
+  }
+
   async addMessage(roomId: string, message: ChatMessage): Promise<void> {
-    await RoomModel.findByIdAndUpdate(
+    await this.model.findByIdAndUpdate(
       roomId,
       { $push: { messages: { $each: [message], $slice: -200 } } },
     ).exec();
@@ -127,6 +144,6 @@ export class RoomRepository {
 
   async deleteOldRooms(): Promise<void> {
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    await RoomModel.deleteMany({ createdAt: { $lt: oneDayAgo } }).exec();
+    await this.deleteMany({ createdAt: { $lt: oneDayAgo } });
   }
 }

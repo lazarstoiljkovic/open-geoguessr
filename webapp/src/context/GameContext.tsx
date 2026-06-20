@@ -1,8 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useReducer, useRef, useState } from 'react';
 import socket from '../modules/socket';
-import { EliminationRoundResult, GameStatus, LivePin, Player, Room, Round, RoundGuess } from '../types';
+import { ChatMessage, EliminationRoundResult, GameStatus, LivePin, Player, Room, Round, RoundGuess } from '../types';
 import * as gameApi from '../api/game.api';
-import { ChatMessage } from '../components/Chat/Chat';
 
 export interface RoundSummary {
   index: number;
@@ -28,6 +27,7 @@ interface GameState {
   finalResults: { players: Player[] } | null;
   allRoundResults: RoundSummary[];
   messages: ChatMessage[];
+  teamMessages: ChatMessage[];
   eliminatedPlayerIds: string[];
   livePlayerPins: LivePin[];
 }
@@ -46,6 +46,7 @@ type Action =
   | { type: 'GAME_OVER'; players: Player[] }
   | { type: 'CHAT_MESSAGE'; message: ChatMessage }
   | { type: 'CHAT_HISTORY'; messages: ChatMessage[] }
+  | { type: 'TEAM_MESSAGE'; message: ChatMessage }
   | { type: 'PIN_MOVE'; pin: LivePin }
   | { type: 'RESET' };
 
@@ -134,6 +135,8 @@ function reducer(state: GameState, action: Action): GameState {
       return { ...state, messages: [...state.messages, action.message] };
     case 'CHAT_HISTORY':
       return { ...state, messages: action.messages };
+    case 'TEAM_MESSAGE':
+      return { ...state, teamMessages: [...state.teamMessages, action.message] };
     case 'PIN_MOVE': {
       const updated = state.livePlayerPins.filter((p) => p.userId !== action.pin.userId);
       return { ...state, livePlayerPins: [...updated, action.pin] };
@@ -160,6 +163,7 @@ const initialState: GameState = {
   finalResults: null,
   allRoundResults: [],
   messages: [],
+  teamMessages: [],
   eliminatedPlayerIds: [],
   livePlayerPins: [],
 };
@@ -200,6 +204,8 @@ interface GameContextValue extends GameState {
   leaveRoom: () => void;
   reset: () => void;
   sendMessage: (text: string) => void;
+  sendTeamMessage: (text: string) => void;
+  joinTeam: (teamId: number) => void;
   broadcastPinMove: (lat: number, lng: number) => void;
   requestHint: (hintType: 'continent' | 'country') => Promise<void>;
   hintResults: { continent?: string; country?: string };
@@ -287,6 +293,9 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       socket.on('chat_history', (data) => {
         dispatch({ type: 'CHAT_HISTORY', messages: (data as { messages: ChatMessage[] }).messages });
       }),
+      socket.on('new_team_message', (data) => {
+        dispatch({ type: 'TEAM_MESSAGE', message: data as ChatMessage });
+      }),
       socket.on('spectator_pin_move', (data) => {
         dispatch({ type: 'PIN_MOVE', pin: data as LivePin });
       }),
@@ -352,6 +361,14 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     socket.send('send_message', { text });
   }, []);
 
+  const sendTeamMessage = useCallback((text: string) => {
+    socket.send('send_team_message', { text });
+  }, []);
+
+  const joinTeam = useCallback((teamId: number) => {
+    socket.send('join_team', { teamId });
+  }, []);
+
   const broadcastPinMove = useCallback((lat: number, lng: number) => {
     socket.send('pin_move', { lat, lng });
   }, []);
@@ -378,6 +395,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       leaveRoom,
       reset,
       sendMessage,
+      sendTeamMessage,
+      joinTeam,
       broadcastPinMove,
       requestHint,
       hintResults,

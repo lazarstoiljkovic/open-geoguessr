@@ -10,6 +10,7 @@ export interface Player {
   isHost: boolean;
   score: number;
   connected: boolean;
+  teamId?: number;
 }
 
 export interface RoundLocation {
@@ -55,6 +56,14 @@ export interface LivePin {
   lng: number;
 }
 
+export interface ChatMessage {
+  userId: string;
+  username: string;
+  text: string;
+  timestamp: number;
+  teamId?: number;
+}
+
 export interface Room {
   id: string;
   code: string;
@@ -68,6 +77,8 @@ export interface Room {
   gameMode: GameMode;
   eliminatedPlayerIds: string[];
   hintsEnabled: boolean;
+  teamsEnabled: boolean;
+  teamSize: number;
 }
 
 export interface LeaderboardEntry {

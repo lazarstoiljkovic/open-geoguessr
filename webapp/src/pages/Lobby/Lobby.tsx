@@ -23,6 +23,7 @@ export default function Lobby() {
   const [duration, setDuration] = useState(60);
   const [rounds, setRounds] = useState(5);
   const [hintsEnabled, setHintsEnabled] = useState(false);
+  const [teamsEnabled, setTeamsEnabled] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -34,7 +35,7 @@ export default function Lobby() {
     setError('');
     setLoading(true);
     try {
-      const created = await createRoom(locationMode, gameMode, rounds, duration, hintsEnabled);
+      const created = await createRoom(locationMode, gameMode, rounds, duration, hintsEnabled, teamsEnabled);
       navigate(`/room/${created.code}`);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to create room');
@@ -171,6 +172,27 @@ export default function Lobby() {
             </div>
             {hintsEnabled && (
               <p className="lobby-page__hint">Each player can reveal the continent once and the country once per game.</p>
+            )}
+          </div>
+
+          <div className="form-group">
+            <label>Teams</label>
+            <div className="lobby-page__toggle-row">
+              <button
+                className={`lobby-page__toggle-btn ${!teamsEnabled ? 'lobby-page__toggle-btn--active' : ''}`}
+                onClick={() => setTeamsEnabled(false)}
+              >
+                🚫 Disabled
+              </button>
+              <button
+                className={`lobby-page__toggle-btn ${teamsEnabled ? 'lobby-page__toggle-btn--active' : ''}`}
+                onClick={() => setTeamsEnabled(true)}
+              >
+                👥 2v2 Teams
+              </button>
+            </div>
+            {teamsEnabled && (
+              <p className="lobby-page__hint">Players pick their team in the room lobby. Team chat unlocked.</p>
             )}
           </div>
 

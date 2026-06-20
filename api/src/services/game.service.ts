@@ -1,32 +1,44 @@
 import { Service } from 'typedi';
 import { RoomRepository } from 'src/database/repositories/room.repository';
-import { UserRepository } from 'src/database/repositories/user.repository';
 import { LocationService } from './location.service';
 import { broadcastToRoom, getClientsInRoom } from 'src/websocket/ws.clients';
 import { haversineDistance } from 'src/utils/geo.utils';
 import { LocationMode } from 'src/patterns/factory/game.factory';
+import { ScoringContext } from 'src/patterns/scoring/scoring.context';
+import { ScoringStrategy } from 'src/patterns/scoring/scoring.strategy';
 import { DistanceScoringStrategy } from 'src/patterns/scoring/distance.strategy';
+import { TimeBonusScoringStrategy } from 'src/patterns/scoring/time-bonus.strategy';
+import { HintPenaltyDecorator } from 'src/patterns/scoring/hint-penalty.decorator';
+import { AccuracyBonusDecorator } from 'src/patterns/scoring/accuracy-bonus.decorator';
 import { COUNTDOWN_SECONDS } from 'src/constants';
 import { EliminationRoundResult, GameMode, Location, Round } from 'src/types';
 import { IRoom } from 'src/database/models/room.model';
 import axios from 'axios';
+import { GameEventSubject } from 'src/patterns/observer/game-event-subject';
+import { LeaderboardObserver } from 'src/patterns/observer/observers/leaderboard.observer';
+import { BroadcastObserver } from 'src/patterns/observer/observers/broadcast.observer';
 
 export type RoundWithLocation = Round & { location: Location };
 
 const roundTimers = new Map<string, NodeJS.Timeout>();
 const countdownTimers = new Map<string, NodeJS.Timeout>();
-// roomCode -> userId -> Set of used hint types
 const hintUsage = new Map<string, Map<string, Set<string>>>();
+// roomCode -> ScoringContext (strategija izabrana pri startGame, živi kroz celu partiju)
+const scoringContexts = new Map<string, ScoringContext>();
 
 @Service()
-export class GameService {
-  private readonly scoring = new DistanceScoringStrategy();
+export class GameService extends GameEventSubject {
 
   constructor(
     private readonly roomRepository: RoomRepository,
-    private readonly userRepository: UserRepository,
     private readonly locationService: LocationService,
-  ) {}
+    leaderboardObserver: LeaderboardObserver,
+    broadcastObserver: BroadcastObserver,
+  ) {
+    super();
+    this.registerObserver(leaderboardObserver);
+    this.registerObserver(broadcastObserver);
+  }
 
   // ── Start game ─────────────────────────────────────────────────────────────
 
@@ -50,6 +62,20 @@ export class GameService {
     await this.roomRepository.initGame(room._id.toString(), rounds, locationMode, roundDurationSeconds, gameMode);
     await this.roomRepository.setStatus(room._id.toString(), 'countdown');
     hintUsage.set(roomCode, new Map());
+
+    // Strategy: klijent bira algoritam na osnovu game moda
+    let finalStrategy: ScoringStrategy =
+      gameMode === 'elimination' ? new TimeBonusScoringStrategy() : new DistanceScoringStrategy();
+
+    // Decorator: kondicionalno slaganje dekoratora povrh izabrane strategije
+    if (room.hintsEnabled) {
+      finalStrategy = new HintPenaltyDecorator(finalStrategy); // -15% po hintu
+    }
+    finalStrategy = new AccuracyBonusDecorator(finalStrategy); // +20% za pogodak < 100km
+
+    const scoringContext = new ScoringContext();
+    scoringContext.setStrategy(finalStrategy);
+    scoringContexts.set(roomCode, scoringContext);
 
     broadcastToRoom(roomCode, 'game_countdown', { seconds: COUNTDOWN_SECONDS });
 
@@ -211,10 +237,13 @@ export class GameService {
 
     const distanceKm = haversineDistance(lat, lng, round.location.lat, round.location.lng);
     const timeTakenSeconds = (Date.now() - round.startedAt) / 1000;
-    const roundScore = this.scoring.calculate({
+    const hintsUsed = hintUsage.get(roomCode)?.get(userId)?.size ?? 0;
+    const context = scoringContexts.get(roomCode) ?? new ScoringContext();
+    const roundScore = context.calculate({
       distanceKm,
       timeTakenSeconds,
       roundDurationSeconds: room.roundDurationSeconds,
+      hintsUsed,
     });
 
     const guess = { userId, lat, lng, distanceKm, roundScore, submittedAt: Date.now() };
@@ -284,16 +313,15 @@ export class GameService {
   }
 
   private async triggerGameOver(roomId: string, roomCode: string): Promise<void> {
+    scoringContexts.delete(roomCode);
     await this.roomRepository.setStatus(roomId, 'game_over');
     const finalRoom = await this.roomRepository.findByCode(roomCode);
     if (!finalRoom) return;
 
-    for (const player of finalRoom.players) {
-      await this.userRepository.updateScore(player.userId, player.score);
-    }
-
-    broadcastToRoom(roomCode, 'game_over', {
-      players: finalRoom.players.sort((a, b) => b.score - a.score),
+    await this.notifyGameOver({
+      roomId,
+      roomCode,
+      players: finalRoom.players,
     });
   }
 

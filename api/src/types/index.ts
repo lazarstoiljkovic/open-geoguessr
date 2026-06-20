@@ -30,6 +30,7 @@ export interface Player {
   isHost: boolean;
   score: number;
   connected: boolean;
+  teamId?: number;
 }
 
 export interface ChatMessage {
@@ -37,6 +38,7 @@ export interface ChatMessage {
   username: string;
   text: string;
   timestamp: number;
+  teamId?: number;
 }
 
 export interface RoundGuess {

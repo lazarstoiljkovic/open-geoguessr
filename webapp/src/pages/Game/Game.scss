@@ -78,6 +78,31 @@
     letter-spacing: -0.5px;
   }
 
+  &__team-result {
+    text-align: center;
+    padding: 12px 20px;
+    background: rgba($color-primary, 0.08);
+    border: 1px solid rgba($color-primary, 0.2);
+    border-radius: 12px;
+    margin-bottom: 8px;
+  }
+
+  &__team-result-text {
+    font-size: 18px;
+    font-weight: 700;
+    color: $color-primary;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  &__team-scores {
+    font-size: 13px;
+    font-weight: 500;
+    color: $color-text-muted;
+  }
+
   &__final-winner {
     text-align: center;
     color: $color-text-muted;
@@ -318,6 +343,38 @@
     display: flex;
     align-items: center;
     gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  &__team-hud {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: 4px;
+  }
+
+  &__team-pill {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: $font-heading;
+    background: $color-surface-2;
+    border: 1px solid $color-border;
+    color: $color-text-muted;
+    letter-spacing: 0.3px;
+
+    &--mine {
+      background: rgba($color-primary, 0.12);
+      border-color: rgba($color-primary, 0.35);
+      color: $color-primary;
+    }
+  }
+
+  &__team-vs {
+    font-size: 10px;
+    color: $color-text-muted;
+    font-weight: 600;
   }
 
   &__round-pill {

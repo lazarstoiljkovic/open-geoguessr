@@ -2,12 +2,14 @@ import { Service } from 'typedi';
 import { RoomRepository } from 'src/database/repositories/room.repository';
 import { AuthenticatedClient, broadcastToRoom, getClientsInRoom } from '../ws.clients';
 import { GameService, RoundWithLocation } from 'src/services/game.service';
+import { RoomService } from 'src/services/room.service';
 
 @Service()
 export class GameHandler {
   constructor(
     private readonly roomRepository: RoomRepository,
     private readonly gameService: GameService,
+    private readonly roomService: RoomService,
   ) {}
 
   async handle(client: AuthenticatedClient, event: string, data: Record<string, unknown>): Promise<void> {
@@ -18,6 +20,10 @@ export class GameHandler {
         return this.onLeaveRoom(client);
       case 'send_message':
         return this.onSendMessage(client, data as { text: string });
+      case 'send_team_message':
+        return this.onSendTeamMessage(client, data as { text: string });
+      case 'join_team':
+        return this.onJoinTeam(client, data as { teamId: number });
       case 'pin_move':
         return this.onPinMove(client, data as { lat: number; lng: number });
       default:
@@ -122,6 +128,43 @@ export class GameHandler {
     broadcastToRoom(client.roomCode, 'new_message', message);
   }
 
+  private async onJoinTeam(client: AuthenticatedClient, data: { teamId: number }): Promise<void> {
+    if (!client.roomCode) return;
+    const teamId = Number(data.teamId);
+    if (teamId !== 1 && teamId !== 2) {
+      return client.send(JSON.stringify({ event: 'error', data: { message: 'Invalid teamId' } }));
+    }
+    try {
+      await this.roomService.joinTeam(client.roomCode, client.userId, teamId);
+      const updatedRoom = await this.roomRepository.findByCode(client.roomCode);
+      broadcastToRoom(client.roomCode, 'room_updated', this.serializeRoom(updatedRoom!));
+    } catch (err) {
+      client.send(JSON.stringify({ event: 'error', data: { message: err instanceof Error ? err.message : 'Failed to join team' } }));
+    }
+  }
+
+  private async onSendTeamMessage(client: AuthenticatedClient, data: { text: string }): Promise<void> {
+    if (!client.roomCode) return;
+    const text = String(data.text ?? '').trim().slice(0, 300);
+    if (!text) return;
+
+    const room = await this.roomRepository.findByCode(client.roomCode);
+    if (!room) return;
+
+    const sender = room.players.find((p) => p.userId === client.userId);
+    if (!sender?.teamId) return;
+
+    const message = { userId: client.userId, username: client.username, text, timestamp: Date.now(), teamId: sender.teamId };
+
+    const teamClients = getClientsInRoom(client.roomCode).filter((c) => {
+      const p = room.players.find((pl) => pl.userId === c.userId);
+      return p?.teamId === sender.teamId;
+    });
+
+    const payload = JSON.stringify({ event: 'new_team_message', data: message });
+    teamClients.forEach((c) => c.send(payload));
+  }
+
   // Broadcast active player's pin position to all spectators in the room
   private onPinMove(client: AuthenticatedClient, data: { lat: number; lng: number }): void {
     if (!client.roomCode) return;
@@ -148,6 +191,7 @@ export class GameHandler {
     players: unknown; totalRounds: number; currentRoundIndex: number;
     roundDurationSeconds: number; locationMode?: string; gameMode?: string;
     eliminatedPlayerIds?: string[]; hintsEnabled?: boolean;
+    teamsEnabled?: boolean; teamSize?: number;
   }) {
     return {
       id: room._id,
@@ -162,6 +206,8 @@ export class GameHandler {
       gameMode: room.gameMode ?? 'standard',
       eliminatedPlayerIds: room.eliminatedPlayerIds ?? [],
       hintsEnabled: room.hintsEnabled ?? false,
+      teamsEnabled: room.teamsEnabled ?? false,
+      teamSize: room.teamSize ?? 2,
     };
   }
 }

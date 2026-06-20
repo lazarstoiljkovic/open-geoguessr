@@ -15,6 +15,9 @@ export interface IRoom extends Document {
   eliminatedPlayerIds: string[];
   messages: ChatMessage[];
   hintsEnabled: boolean;
+  spectatorsAllowed: boolean;
+  teamsEnabled: boolean;
+  teamSize: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -74,6 +77,7 @@ const PlayerSchema = new Schema(
     isHost: Boolean,
     score: { type: Number, default: 0 },
     connected: { type: Boolean, default: true },
+    teamId: { type: Number },
   },
   { _id: false },
 );
@@ -97,6 +101,9 @@ const RoomSchema = new Schema<IRoom>(
     eliminatedPlayerIds: { type: [String], default: [] },
     messages: { type: [ChatMessageSchema], default: [] },
     hintsEnabled: { type: Boolean, default: false },
+    spectatorsAllowed: { type: Boolean, default: false },
+    teamsEnabled: { type: Boolean, default: false },
+    teamSize: { type: Number, default: 2 },
   },
   { timestamps: true },
 );

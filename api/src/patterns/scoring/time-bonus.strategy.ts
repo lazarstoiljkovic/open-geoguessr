@@ -1,16 +1,13 @@
 import { ScoringInput, ScoringStrategy } from './scoring.strategy';
-import { DistanceScoringStrategy } from './distance.strategy';
+import { MAX_DISTANCE_KM, MAX_SCORE_PER_ROUND } from 'src/constants';
 
-const MAX_TIME_BONUS = 1000;
-
+// Nezavisan algoritam — kombinuje distancu (70%) i brzinu (30%) kroz sopstvenu formulu.
+// Ne oslanja se na DistanceScoringStrategy.
 export class TimeBonusScoringStrategy implements ScoringStrategy {
-  private readonly base = new DistanceScoringStrategy();
-
-  calculate(input: ScoringInput): number {
-    const baseScore = this.base.calculate(input);
-    if (baseScore === 0) return 0;
-    const timeRatio = Math.max(0, 1 - input.timeTakenSeconds / input.roundDurationSeconds);
-    const timeBonus = Math.round(MAX_TIME_BONUS * timeRatio);
-    return baseScore + timeBonus;
+  calculate({ distanceKm, timeTakenSeconds, roundDurationSeconds }: ScoringInput): number {
+    const distanceRatio = Math.max(0, 1 - distanceKm / MAX_DISTANCE_KM);
+    const timeRatio = Math.max(0, 1 - timeTakenSeconds / roundDurationSeconds);
+    const score = MAX_SCORE_PER_ROUND * (0.7 * Math.pow(distanceRatio, 2) + 0.3 * timeRatio);
+    return Math.round(score);
   }
 }

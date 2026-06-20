@@ -14,7 +14,7 @@ function formatDuration(s: number) {
 export default function Room() {
   const { code } = useParams<{ code: string }>();
   const { user, isAuthenticated } = useAuth();
-  const { room, status, joinRoom, startGame, leaveRoom, isStarting } = useGame();
+  const { room, status, joinRoom, startGame, leaveRoom, joinTeam, isStarting } = useGame();
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
 
@@ -48,6 +48,9 @@ export default function Room() {
 
   const isHost = room.hostId === user?.id;
   const isElimination = room.gameMode === 'elimination';
+  const myTeamId = room.players.find((p) => p.userId === user?.id)?.teamId;
+  const team1Players = room.players.filter((p) => p.teamId === 1);
+  const team2Players = room.players.filter((p) => p.teamId === 2);
 
   return (
     <div className="room-page">
@@ -69,7 +72,7 @@ export default function Room() {
       <div className="room-page__body">
         <div className="room-page__players">
           <h2>Players <span className="room-page__player-count">{room.players.length}</span></h2>
-          <Scoreboard players={room.players} currentUserId={user?.id} />
+          <Scoreboard players={room.players} currentUserId={user?.id} teamsEnabled={room.teamsEnabled} />
         </div>
 
         <div className="room-page__sidebar">
@@ -108,6 +111,40 @@ export default function Room() {
             <p className="room-page__mode-hint">
               Worst guesser each round is eliminated. Last one standing wins.
             </p>
+          )}
+
+          {room.teamsEnabled && (
+            <div className="room-page__teams">
+              <h3 className="room-page__teams-title">Choose your team</h3>
+              <div className="room-page__teams-grid">
+                {[1, 2].map((tid) => {
+                  const members = tid === 1 ? team1Players : team2Players;
+                  const isMine = myTeamId === tid;
+                  const isFull = members.length >= room.teamSize && !isMine;
+                  return (
+                    <button
+                      key={tid}
+                      className={`room-page__team-btn${isMine ? ' room-page__team-btn--active' : ''}${isFull ? ' room-page__team-btn--full' : ''}`}
+                      onClick={() => !isMine && !isFull && joinTeam(tid)}
+                      disabled={isFull && !isMine}
+                    >
+                      <span className="room-page__team-name">Team {tid}</span>
+                      <span className="room-page__team-count">{members.length}/{room.teamSize}</span>
+                      <div className="room-page__team-members">
+                        {members.length === 0
+                          ? <span className="room-page__team-empty">Empty</span>
+                          : members.map((p) => (
+                            <span key={p.userId} className="room-page__team-member">
+                              {p.username}{p.userId === user?.id ? ' (you)' : ''}
+                            </span>
+                          ))
+                        }
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           )}
 
           {isHost ? (

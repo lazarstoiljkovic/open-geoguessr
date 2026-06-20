@@ -24,7 +24,7 @@ async function main() {
 
   const locationService = Container.get(LocationService);
   const repo = Container.get(CachedLocationRepository);
-  const alreadyInDb = await repo.countAll();
+  const alreadyInDb = await repo.count();
 
   console.log(`\n  Prefill starting`);
   console.log(`  Target  : ${target} new locations`);
