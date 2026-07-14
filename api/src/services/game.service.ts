@@ -3,7 +3,7 @@ import { RoomRepository } from 'src/database/repositories/room.repository';
 import { LocationService } from './location.service';
 import { broadcastToRoom, getClientsInRoom } from 'src/websocket/ws.clients';
 import { haversineDistance } from 'src/utils/geo.utils';
-import { LocationMode } from 'src/patterns/factory/game.factory';
+import { LocationMode } from 'src/types';
 import { ScoringContext } from 'src/patterns/scoring/scoring.context';
 import { ScoringStrategy } from 'src/patterns/scoring/scoring.strategy';
 import { DistanceScoringStrategy } from 'src/patterns/scoring/distance.strategy';

@@ -1,6 +1,5 @@
 import { Service } from 'typedi';
-import { Location } from 'src/types';
-import { LocationMode } from 'src/patterns/factory/game.factory';
+import { Location, LocationMode } from 'src/types';
 import { ICachedLocation } from 'src/database/models/cached-location.model';
 import { GameLocationProviderFactory } from 'src/patterns/factory/location-provider.factory';
 

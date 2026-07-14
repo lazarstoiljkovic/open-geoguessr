@@ -1,7 +1,7 @@
 import { Service } from 'typedi';
 import { CachedLocationRepository } from 'src/database/repositories/cached-location.repository';
 import { GoogleStreetViewService } from 'src/services/google-streetview.service';
-import { LocationMode } from './game.factory';
+import { LocationMode } from 'src/types';
 import { ILocationProvider } from './location-provider.interface';
 import { FamousLocationProvider } from './providers/famous-location.provider';
 import { WorldLocationProvider } from './providers/world-location.provider';

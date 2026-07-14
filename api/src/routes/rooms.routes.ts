@@ -2,7 +2,7 @@ import Router from 'koa-router';
 import { Container } from 'typedi';
 import { RoomService } from 'src/services/room.service';
 import { authMiddleware } from 'src/middlewares/auth.middleware';
-import { LocationMode, GameMode } from 'src/patterns/factory/game.factory';
+import { GameMode, LocationMode } from 'src/types';
 
 const router = new Router({ prefix: '/rooms' });
 const roomService = () => Container.get(RoomService);

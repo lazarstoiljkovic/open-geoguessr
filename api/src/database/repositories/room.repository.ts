@@ -1,7 +1,6 @@
 import { Service } from 'typedi';
 import { IRoom, RoomModel } from '../models/room.model';
-import { ChatMessage, GameStatus, Location, Player, Round } from 'src/types';
-import { LocationMode, GameMode } from 'src/patterns/factory/game.factory';
+import { ChatMessage, GameMode, GameStatus, Location, LocationMode, Player, Round } from 'src/types';
 import { BaseRepository } from './base.repository';
 
 @Service()

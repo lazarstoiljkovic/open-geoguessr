@@ -18,6 +18,7 @@ export interface Location {
 
 export type GameStatus = 'waiting' | 'countdown' | 'playing' | 'round_results' | 'game_over';
 export type GameMode = 'standard' | 'elimination';
+export type LocationMode = 'famous' | 'world';
 
 export interface EliminationRoundResult {
   eliminatedUserIds: string[];

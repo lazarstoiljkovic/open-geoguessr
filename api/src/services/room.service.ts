@@ -1,8 +1,7 @@
 import { Service } from 'typedi';
 import { RoomRepository } from 'src/database/repositories/room.repository';
 import { generateRoomCode } from 'src/utils/geo.utils';
-import { Player } from 'src/types';
-import { LocationMode, GameMode } from 'src/patterns/factory/game.factory';
+import { GameMode, LocationMode, Player } from 'src/types';
 import { IGameSetup } from 'src/patterns/game-setup/game-setup.interface';
 import { StandardGameSetup } from 'src/patterns/game-setup/setups/standard-game.setup';
 import { EliminationGameSetup } from 'src/patterns/game-setup/setups/elimination-game.setup';
