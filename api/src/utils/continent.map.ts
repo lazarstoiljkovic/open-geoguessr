@@ -1,5 +1,4 @@
 const COUNTRY_CONTINENT: Record<string, string> = {
-  // Europe
   Albania: 'Europe', Andorra: 'Europe', Austria: 'Europe', Belarus: 'Europe',
   Belgium: 'Europe', 'Bosnia and Herzegovina': 'Europe', Bulgaria: 'Europe',
   Croatia: 'Europe', Cyprus: 'Europe', 'Czech Republic': 'Europe', Denmark: 'Europe',
@@ -12,7 +11,6 @@ const COUNTRY_CONTINENT: Record<string, string> = {
   Russia: 'Europe', 'San Marino': 'Europe', Serbia: 'Europe', Slovakia: 'Europe',
   Slovenia: 'Europe', Spain: 'Europe', Sweden: 'Europe', Switzerland: 'Europe',
   Ukraine: 'Europe', 'United Kingdom': 'Europe', 'Vatican City': 'Europe',
-  // Africa
   Algeria: 'Africa', Angola: 'Africa', Benin: 'Africa', Botswana: 'Africa',
   'Burkina Faso': 'Africa', Burundi: 'Africa', Cameroon: 'Africa', 'Cape Verde': 'Africa',
   'Central African Republic': 'Africa', Chad: 'Africa', Comoros: 'Africa',
@@ -27,7 +25,6 @@ const COUNTRY_CONTINENT: Record<string, string> = {
   Seychelles: 'Africa', 'Sierra Leone': 'Africa', Somalia: 'Africa', 'South Africa': 'Africa',
   'South Sudan': 'Africa', Sudan: 'Africa', Tanzania: 'Africa', Togo: 'Africa',
   Tunisia: 'Africa', Uganda: 'Africa', Zambia: 'Africa', Zimbabwe: 'Africa',
-  // Asia
   Afghanistan: 'Asia', Armenia: 'Asia', Azerbaijan: 'Asia', Bahrain: 'Asia',
   Bangladesh: 'Asia', Bhutan: 'Asia', Brunei: 'Asia', Cambodia: 'Asia',
   China: 'Asia', Georgia: 'Asia', India: 'Asia', Indonesia: 'Asia',
@@ -40,7 +37,6 @@ const COUNTRY_CONTINENT: Record<string, string> = {
   Syria: 'Asia', Taiwan: 'Asia', Tajikistan: 'Asia', Thailand: 'Asia',
   'Timor-Leste': 'Asia', Turkey: 'Asia', 'Türkiye': 'Asia', Turkmenistan: 'Asia',
   'United Arab Emirates': 'Asia', Uzbekistan: 'Asia', Vietnam: 'Asia', Yemen: 'Asia',
-  // North America
   'Antigua and Barbuda': 'North America', Bahamas: 'North America', Barbados: 'North America',
   Belize: 'North America', Canada: 'North America', 'Costa Rica': 'North America',
   Cuba: 'North America', Dominica: 'North America', 'Dominican Republic': 'North America',
@@ -48,12 +44,10 @@ const COUNTRY_CONTINENT: Record<string, string> = {
   Haiti: 'North America', Honduras: 'North America', Jamaica: 'North America',
   Mexico: 'North America', Nicaragua: 'North America', Panama: 'North America',
   'Trinidad and Tobago': 'North America', 'United States': 'North America',
-  // South America
   Argentina: 'South America', Bolivia: 'South America', Brazil: 'South America',
   Chile: 'South America', Colombia: 'South America', Ecuador: 'South America',
   Guyana: 'South America', Paraguay: 'South America', Peru: 'South America',
   Suriname: 'South America', Uruguay: 'South America', Venezuela: 'South America',
-  // Oceania
   Australia: 'Oceania', Fiji: 'Oceania', Kiribati: 'Oceania', 'Marshall Islands': 'Oceania',
   Micronesia: 'Oceania', Nauru: 'Oceania', 'New Zealand': 'Oceania', Palau: 'Oceania',
   'Papua New Guinea': 'Oceania', Samoa: 'Oceania', 'Solomon Islands': 'Oceania',

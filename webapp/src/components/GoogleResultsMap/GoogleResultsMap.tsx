@@ -99,7 +99,6 @@ export default function GoogleResultsMap({ guesses, correctLat, correctLng, play
 
       const infoWindow = new google.maps.InfoWindow({ disableAutoPan: true });
 
-      // Place markers + animate lines sequentially
       guesses.forEach((guess, i) => {
         const player = players.find((p) => p.userId === guess.userId);
         const username = player?.username ?? 'Player';
@@ -108,7 +107,6 @@ export default function GoogleResultsMap({ guesses, correctLat, correctLng, play
         const pos = new google.maps.LatLng(guess.lat, guess.lng);
         bounds.extend(pos);
 
-        // Animate line with staggered delay
         animateLine(map, pos, correctPos, color, i * 350);
 
         const marker = new google.maps.Marker({
@@ -124,7 +122,6 @@ export default function GoogleResultsMap({ guesses, correctLat, correctLng, play
           opacity: 0,
         });
 
-        // Fade marker in after line finishes drawing
         setTimeout(() => {
           if (!cancelled) marker.setOpacity(1);
         }, i * 350 + 600);

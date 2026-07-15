@@ -12,7 +12,6 @@ const DURATIONS = [
   { label: '2 min', value: 120 },
 ];
 
-
 export default function Lobby() {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
@@ -61,7 +60,6 @@ export default function Lobby() {
 
   return (
     <div className="lobby-page">
-      {/* Left hero panel */}
       <div className="lobby-page__hero">
         <div className="lobby-page__orb lobby-page__orb--gold" />
         <div className="lobby-page__orb lobby-page__orb--blue" />
@@ -87,9 +85,7 @@ export default function Lobby() {
         </div>
       </div>
 
-      {/* Right forms panel */}
       <div className="lobby-page__forms">
-        {/* Create room */}
         <div className="lobby-page__card">
           <div className="lobby-page__card-header">
             <h2>Create Room</h2>
@@ -220,7 +216,6 @@ export default function Lobby() {
 
         <div className="lobby-page__divider"><span>or join existing</span></div>
 
-        {/* Join room */}
         <div className="lobby-page__card lobby-page__card--join">
           <div className="lobby-page__card-header">
             <h2>Join Room</h2>

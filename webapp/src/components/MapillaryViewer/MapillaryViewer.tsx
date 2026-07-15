@@ -39,12 +39,11 @@ export default function MapillaryViewer({ imageId, accessToken }: MapillaryViewe
       if (!event.loading) setLoading(false);
     });
 
-    // Fallback: hide spinner after 6s regardless
     const fallback = setTimeout(() => setLoading(false), 6000);
 
     return () => {
       clearTimeout(fallback);
-      try { viewer.remove(); } catch { /* ignore */ }
+      try { viewer.remove(); } catch {  }
       viewerRef.current = null;
     };
   }, [imageId, accessToken]);

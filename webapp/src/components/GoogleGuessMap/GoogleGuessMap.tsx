@@ -20,7 +20,6 @@ export default function GoogleGuessMap({ onGuess, onPinMove, disabled = false }:
   const [isOpen, setIsOpen] = useState(false);
   const [mapReady, setMapReady] = useState(false);
 
-  // Initialize map once
   useEffect(() => {
     if (!GOOGLE_MAPS_KEY) return;
     let cancelled = false;
@@ -66,7 +65,6 @@ export default function GoogleGuessMap({ onGuess, onPinMove, disabled = false }:
     return () => { cancelled = true; };
   }, [disabled]);
 
-  // Trigger map resize when modal opens
   useEffect(() => {
     if (isOpen && mapRef.current && mapReady) {
       setTimeout(() => {
@@ -91,7 +89,6 @@ export default function GoogleGuessMap({ onGuess, onPinMove, disabled = false }:
 
   return (
     <>
-      {/* Trigger button — always visible */}
       <button
         className={`gg-trigger${pin ? ' gg-trigger--pinned' : ''}`}
         onClick={() => setIsOpen(true)}
@@ -101,7 +98,6 @@ export default function GoogleGuessMap({ onGuess, onPinMove, disabled = false }:
         {pin && <span className="gg-trigger__dot" />}
       </button>
 
-      {/* Modal */}
       <div className={`gg-modal${isOpen ? ' gg-modal--open' : ''}`}>
         <div className="gg-modal__backdrop" onClick={() => setIsOpen(false)} />
         <div className="gg-modal__box">

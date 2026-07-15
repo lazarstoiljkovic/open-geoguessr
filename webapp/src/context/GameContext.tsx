@@ -168,15 +168,13 @@ const initialState: GameState = {
   livePlayerPins: [],
 };
 
-// ── Session persistence ────────────────────────────────────────────────────
-
 const SESSION_KEY = 'og_game_state';
 
 function persistState(state: GameState): void {
   const { countdownSeconds, roundCountdown, messages, livePlayerPins, ...toSave } = state;
   try {
     sessionStorage.setItem(SESSION_KEY, JSON.stringify(toSave));
-  } catch { /* ignore */ }
+  } catch {  }
 }
 
 function loadPersistedState(): Partial<GameState> | null {
@@ -193,8 +191,6 @@ function makeInitialState(): GameState {
   if (persisted?.room) return { ...initialState, ...persisted };
   return initialState;
 }
-
-// ── Context ────────────────────────────────────────────────────────────────
 
 interface GameContextValue extends GameState {
   joinRoom: (roomCode: string) => void;

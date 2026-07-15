@@ -75,7 +75,6 @@ export class GameHandler {
     client.send(JSON.stringify({ event: 'joined_room', data: this.serializeRoom(updatedRoom!) }));
     client.send(JSON.stringify({ event: 'chat_history', data: { messages: updatedRoom!.messages ?? [] } }));
 
-    // Catch-up: resend state-restoring event based on current room status
     const catchUpRoom = updatedRoom!;
     if (catchUpRoom.status === 'playing') {
       const round = catchUpRoom.rounds[catchUpRoom.currentRoundIndex];
@@ -165,7 +164,6 @@ export class GameHandler {
     teamClients.forEach((c) => c.send(payload));
   }
 
-  // Broadcast active player's pin position to all spectators in the room
   private onPinMove(client: AuthenticatedClient, data: { lat: number; lng: number }): void {
     if (!client.roomCode) return;
     const lat = Number(data.lat);

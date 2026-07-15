@@ -6,7 +6,7 @@ interface Props {
   lat: number;
   lng: number;
   apiKey: string;
-  panoId?: string; // unused on client — backend coords are already exact
+  panoId?: string;
 }
 
 export default function GoogleStreetViewViewer({ lat, lng, apiKey }: Props) {
@@ -24,9 +24,6 @@ export default function GoogleStreetViewViewer({ lat, lng, apiKey }: Props) {
       if (cancelled || !containerRef.current) return;
 
       try {
-        // Use the exact panorama coordinates returned by the backend metadata API.
-        // The backend already confirmed outdoor Street View exists at this position,
-        // so the JS API will find the same panorama via coordinate lookup.
         const panorama = new window.google!.maps.StreetViewPanorama(containerRef.current, {
           position: { lat, lng },
           pov: { heading: 34, pitch: 10 },
@@ -43,7 +40,6 @@ export default function GoogleStreetViewViewer({ lat, lng, apiKey }: Props) {
         });
         panoramaRef.current = panorama;
 
-        // Fallback: if no OK signal arrives within 30 s, show error
         const timeoutId = setTimeout(() => {
           if (!cancelled) { setError(true); setLoading(false); }
         }, 30000);
@@ -54,14 +50,8 @@ export default function GoogleStreetViewViewer({ lat, lng, apiKey }: Props) {
           setLoading(false);
         };
 
-        // tiles_loaded fires when imagery is fully painted — most reliable success signal.
         panorama.addListener('tiles_loaded', clearLoading);
 
-        // status_changed fires earlier, when the panorama is located and starts
-        // rendering. Accepting OK here avoids waiting the full tile-download time.
-        // We intentionally ignore non-OK statuses here — they can fire transiently
-        // during initialisation even for valid panoramas, so only the timeout
-        // handles genuine failure.
         panorama.addListener('status_changed', () => {
           if (panorama.getStatus() === window.google!.maps.StreetViewStatus.OK) clearLoading();
         });

@@ -28,7 +28,7 @@ router.post('/guess', authMiddleware, async (ctx) => {
   try {
     const result = await gameService().submitGuess(ctx.state.userId, roomCode, lat, lng);
     ctx.status = 200;
-    ctx.body = result; // { distanceKm, roundScore }
+    ctx.body = result;
   } catch (err: unknown) {
     ctx.status = 400;
     ctx.body = { message: err instanceof Error ? err.message : 'Failed to submit guess' };

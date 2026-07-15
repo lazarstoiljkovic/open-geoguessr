@@ -13,7 +13,7 @@ export interface Location {
   imageUrl?: string;
   images: string[];
   mapillaryImageId?: string;
-  streetViewPanoId?: string; // confirmed outdoor pano from metadata API
+  streetViewPanoId?: string;
 }
 
 export type GameStatus = 'waiting' | 'countdown' | 'playing' | 'round_results' | 'game_over';

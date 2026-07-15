@@ -13,7 +13,7 @@ function colorForPlayer(players: Player[], userId: string): string {
 
 interface Props {
   livePlayerPins: LivePin[];
-  activePlayers: Player[];  // non-eliminated players
+  activePlayers: Player[];
   followingUserId: string | null;
   onFollowPlayer: (userId: string) => void;
 }
@@ -23,7 +23,6 @@ export default function SpectatorMap({ livePlayerPins, activePlayers, followingU
   const mapRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<Map<string, google.maps.Marker>>(new Map());
 
-  // Initialize map
   useEffect(() => {
     if (!GOOGLE_MAPS_KEY || !mapDivRef.current) return;
     let cancelled = false;
@@ -42,13 +41,11 @@ export default function SpectatorMap({ livePlayerPins, activePlayers, followingU
     return () => { cancelled = true; };
   }, []);
 
-  // Update markers when pins change
   useEffect(() => {
     if (!mapRef.current) return;
 
     const activeIds = new Set(activePlayers.map((p) => p.userId));
 
-    // Remove markers for players who are no longer active
     markersRef.current.forEach((marker, userId) => {
       if (!activeIds.has(userId)) {
         marker.setMap(null);
@@ -78,7 +75,6 @@ export default function SpectatorMap({ livePlayerPins, activePlayers, followingU
     });
   }, [livePlayerPins, activePlayers, followingUserId]);
 
-  // Pan to followed player when they move
   useEffect(() => {
     if (!mapRef.current || !followingUserId) return;
     const pin = livePlayerPins.find((p) => p.userId === followingUserId);

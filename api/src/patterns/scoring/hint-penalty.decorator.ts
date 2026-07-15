@@ -1,7 +1,7 @@
 import { ScoringInput } from './scoring.strategy';
 import { ScoringDecorator } from './scoring.decorator';
 
-const HINT_PENALTY = 0.15; // 15% kazna po iskorišćenom hintu
+const HINT_PENALTY = 0.15;
 
 export class HintPenaltyDecorator extends ScoringDecorator {
   calculate(input: ScoringInput): number {

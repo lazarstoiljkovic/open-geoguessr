@@ -1,11 +1,3 @@
-/**
- * Populate the CachedLocation collection with confirmed Street View locations.
- *
- * Usage:
- *   npm run prefill                 — 200 locations, 5 workers (default)
- *   npm run prefill 500             — 500 locations, 5 workers
- *   npm run prefill 1000 10         — 1000 locations, 10 parallel workers
- */
 
 import 'reflect-metadata';
 import dotenv from 'dotenv';

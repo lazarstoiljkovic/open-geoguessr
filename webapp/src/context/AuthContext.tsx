@@ -27,7 +27,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (token && user) {
       socket.connect(token);
     }
-    return () => { /* socket persists across page navigations */ };
+    return () => {  };
   }, [token, user]);
 
   const login = useCallback((newToken: string, newUser: User) => {

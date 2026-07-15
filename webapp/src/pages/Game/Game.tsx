@@ -64,7 +64,6 @@ export default function Game() {
 
   const timeLeft = useCountdown(durationSeconds, status === 'playing' && !myGuess, currentRound?.startedAt);
 
-  // Score count-up for round results
   const myRoundGuessScore = (() => {
     if (status === 'round_results' && roundResults) {
       const g = roundResults.round.guesses.find((g) => g.userId === user?.id);
@@ -92,8 +91,6 @@ export default function Game() {
     navigate('/');
   };
 
-  // ── Countdown screen ────────────────────────────────────────────────────
-
   if (status === 'countdown') {
     return (
       <div className="game-page game-page--countdown">
@@ -104,8 +101,6 @@ export default function Game() {
       </div>
     );
   }
-
-  // ── Between-round countdown ─────────────────────────────────────────────
 
   if (status === 'round_countdown') {
     return (
@@ -118,8 +113,6 @@ export default function Game() {
     );
   }
 
-  // ── Game over ───────────────────────────────────────────────────────────
-
   if (status === 'game_over' && finalResults) {
     const MEDALS = ['🥇', '🥈', '🥉'];
     const sorted = [...finalResults.players].sort((a, b) => b.score - a.score);
@@ -129,7 +122,6 @@ export default function Game() {
     const t2Score = teamScore(2);
     const winningTeam = teamsEnabled ? (t1Score > t2Score ? 1 : t2Score > t1Score ? 2 : 0) : null;
 
-    // Podium order: 2nd | 1st | 3rd
     const podiumOrder = [podium[1], podium[0], podium[2]].filter(Boolean);
     const podiumRanks = [2, 1, 3];
     const podiumHeights = [110, 140, 90];
@@ -154,7 +146,6 @@ export default function Game() {
             </div>
           )}
 
-          {/* Podium */}
           <div className="game-page__podium">
             {podiumOrder.map((player, i) => {
               if (!player) return null;
@@ -180,7 +171,6 @@ export default function Game() {
             })}
           </div>
 
-          {/* All players accordion with round breakdown */}
           <div className="game-page__player-list">
             {sorted.map((player, idx) => {
               const isMe = player.userId === user?.id;
@@ -248,8 +238,6 @@ export default function Game() {
       </div>
     );
   }
-
-  // ── Round results ────────────────────────────────────────────────────────
 
   if (status === 'round_results' && roundResults) {
     const { round, players, isLastRound, elimination } = roundResults;
@@ -347,8 +335,6 @@ export default function Game() {
       </div>
     );
   }
-
-  // ── Playing ──────────────────────────────────────────────────────────────
 
   const mapillaryId = currentRound?.location.mapillaryImageId;
   const viewerLat = (currentRound?.location as { viewerLat?: number }).viewerLat;

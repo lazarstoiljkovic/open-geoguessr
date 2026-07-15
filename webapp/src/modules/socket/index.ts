@@ -23,7 +23,6 @@ class SocketClient {
     this.ws = new WebSocket(`${WS_URL}?token=${token}`);
 
     this.ws.onopen = () => {
-      // Flush any messages queued before the socket was ready
       const pending = this.pendingMessages.splice(0);
       pending.forEach((msg) => this.ws!.send(msg));
 
@@ -37,7 +36,7 @@ class SocketClient {
       try {
         const { event, data } = JSON.parse(msg.data);
         this.emit(event, data);
-      } catch { /* ignore malformed messages */ }
+      } catch {  }
     };
 
     this.ws.onclose = () => {
@@ -66,7 +65,6 @@ class SocketClient {
     if (this.ws?.readyState === WebSocket.OPEN) {
       this.ws.send(msg);
     } else {
-      // Queue until socket is ready (handles page refresh race condition)
       this.pendingMessages.push(msg);
     }
   }

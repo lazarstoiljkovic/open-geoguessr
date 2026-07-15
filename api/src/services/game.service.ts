@@ -23,7 +23,6 @@ export type RoundWithLocation = Round & { location: Location };
 const roundTimers = new Map<string, NodeJS.Timeout>();
 const countdownTimers = new Map<string, NodeJS.Timeout>();
 const hintUsage = new Map<string, Map<string, Set<string>>>();
-// roomCode -> ScoringContext (strategija izabrana pri startGame, živi kroz celu partiju)
 const scoringContexts = new Map<string, ScoringContext>();
 
 @Service()
@@ -39,8 +38,6 @@ export class GameService extends GameEventSubject {
     this.registerObserver(leaderboardObserver);
     this.registerObserver(broadcastObserver);
   }
-
-  // ── Start game ─────────────────────────────────────────────────────────────
 
   async startGame(userId: string, roomCode: string): Promise<void> {
     const room = await this.roomRepository.findByCode(roomCode);
@@ -63,15 +60,13 @@ export class GameService extends GameEventSubject {
     await this.roomRepository.setStatus(room._id.toString(), 'countdown');
     hintUsage.set(roomCode, new Map());
 
-    // Strategy: klijent bira algoritam na osnovu game moda
     let finalStrategy: ScoringStrategy =
       gameMode === 'elimination' ? new TimeBonusScoringStrategy() : new DistanceScoringStrategy();
 
-    // Decorator: kondicionalno slaganje dekoratora povrh izabrane strategije
     if (room.hintsEnabled) {
-      finalStrategy = new HintPenaltyDecorator(finalStrategy); // -15% po hintu
+      finalStrategy = new HintPenaltyDecorator(finalStrategy);
     }
-    finalStrategy = new AccuracyBonusDecorator(finalStrategy); // +20% za pogodak < 100km
+    finalStrategy = new AccuracyBonusDecorator(finalStrategy);
 
     const scoringContext = new ScoringContext();
     scoringContext.setStrategy(finalStrategy);
@@ -93,8 +88,6 @@ export class GameService extends GameEventSubject {
     }, 1000);
     countdownTimers.set(roomCode, timer);
   }
-
-  // ── Round lifecycle ────────────────────────────────────────────────────────
 
   async startRound(roomCode: string, roundIndex: number): Promise<void> {
     const room = await this.roomRepository.findByCode(roomCode);
@@ -177,19 +170,15 @@ export class GameService extends GameEventSubject {
     let isTieBreaker = false;
 
     if (noGuessers.length === activePlayerIds.length) {
-      // All players skipped → no elimination, continue
       isTieBreaker = false;
     } else if (noGuessers.length > 0) {
-      // Some didn't guess → they are worst, eliminate them all
       eliminatedUserIds = noGuessers;
     } else {
-      // Everyone guessed → find single worst
       const maxDist = Math.max(...guessers.map((g) => g.distanceKm));
       const worst = guessers.filter((g) => g.distanceKm === maxDist);
       if (worst.length === 1) {
         eliminatedUserIds = [worst[0].userId];
       } else {
-        // Exact tie → tiebreaker round, no elimination
         isTieBreaker = true;
       }
     }
@@ -210,8 +199,6 @@ export class GameService extends GameEventSubject {
     return remaining <= 1;
   }
 
-  // ── Submit guess ───────────────────────────────────────────────────────────
-
   async submitGuess(
     userId: string,
     roomCode: string,
@@ -222,7 +209,6 @@ export class GameService extends GameEventSubject {
     if (!room) throw new Error('Room not found');
     if (room.status !== 'playing') throw new Error('No round in progress');
 
-    // Reject guess from eliminated players
     if ((room.eliminatedPlayerIds ?? []).includes(userId)) {
       throw new Error('You have been eliminated');
     }
@@ -255,7 +241,6 @@ export class GameService extends GameEventSubject {
       await this.roomRepository.updatePlayerScore(room._id.toString(), userId, player.score + roundScore);
     }
 
-    // Check if all ACTIVE players have guessed
     const updatedRoom = await this.roomRepository.findByCode(roomCode);
     if (updatedRoom) {
       const eliminatedIds = updatedRoom.eliminatedPlayerIds ?? [];
@@ -271,8 +256,6 @@ export class GameService extends GameEventSubject {
     return { distanceKm, roundScore };
   }
 
-  // ── Next round ─────────────────────────────────────────────────────────────
-
   async nextRound(userId: string, roomCode: string): Promise<void> {
     const room = await this.roomRepository.findByCode(roomCode);
     if (!room) throw new Error('Room not found');
@@ -282,7 +265,6 @@ export class GameService extends GameEventSubject {
     const eliminatedIds = room.eliminatedPlayerIds ?? [];
     const remainingCount = room.players.length - eliminatedIds.length;
 
-    // For elimination: game ends when ≤1 player remains
     if (room.gameMode === 'elimination' && remainingCount <= 1) {
       await this.triggerGameOver(room._id.toString(), roomCode);
       return;
@@ -290,7 +272,6 @@ export class GameService extends GameEventSubject {
 
     const nextIndex = room.currentRoundIndex + 1;
 
-    // For standard mode: game ends when all rounds played
     if (room.gameMode !== 'elimination' && nextIndex >= room.totalRounds) {
       await this.triggerGameOver(room._id.toString(), roomCode);
       return;
@@ -325,8 +306,6 @@ export class GameService extends GameEventSubject {
     });
   }
 
-  // ── Hints ──────────────────────────────────────────────────────────────────
-
   async requestHint(userId: string, roomCode: string, hintType: 'continent' | 'country'): Promise<{ value: string }> {
     const room = await this.roomRepository.findByCode(roomCode);
     if (!room) throw new Error('Room not found');
@@ -357,8 +336,6 @@ export class GameService extends GameEventSubject {
 
     return { value };
   }
-
-  // ── Serialization ──────────────────────────────────────────────────────────
 
   serializeRoundForClient(round: RoundWithLocation) {
     return {

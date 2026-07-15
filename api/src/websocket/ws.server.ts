@@ -46,7 +46,6 @@ export function initWebSocketServer(server: Server): WebSocketServer {
     });
 
     client.on('close', async () => {
-      // Only act if this is still the active socket for this user.
       if (clients.get(userId) !== client) return;
       if (client.roomCode) {
         await gameHandler.handleDisconnect(client);

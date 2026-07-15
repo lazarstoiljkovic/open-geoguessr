@@ -6,9 +6,6 @@ import { ILocationProvider } from './location-provider.interface';
 import { FamousLocationProvider } from './providers/famous-location.provider';
 import { WorldLocationProvider } from './providers/world-location.provider';
 
-// ── Abstract Creator ────────────────────────────────────────────────────────
-// Declares the factory method. Subclasses decide which ILocationProvider to create.
-
 export abstract class LocationProviderFactory {
   abstract createProvider(mode: LocationMode): ILocationProvider;
 
@@ -17,11 +14,6 @@ export abstract class LocationProviderFactory {
     return provider.getLocation();
   }
 }
-
-// ── Concrete Creator ────────────────────────────────────────────────────────
-// Instantiates the correct provider based on LocationMode.
-// Client code (LocationService) depends only on LocationProviderFactory — never
-// on FamousLocationProvider or WorldLocationProvider directly.
 
 @Service()
 export class GameLocationProviderFactory extends LocationProviderFactory {

@@ -17,8 +17,6 @@ export class GoogleStreetViewService {
     return !!this.key;
   }
 
-  // Calls the FREE metadata endpoint and returns the nearest outdoor panorama.
-  // Returns null if no outdoor coverage within the radius.
   async findNearestPanorama(lat: number, lng: number, radiusMeters = 50000): Promise<PanoramaResult | null> {
     if (!this.key) return null;
     try {
